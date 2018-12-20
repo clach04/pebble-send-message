@@ -14,6 +14,7 @@ var samplingTimeOver = true;  // True when the sampling time is over and the nex
 var locationOptions = {timeout: 4000, maximumAge: 0, enableHighAccuracy: true };
 var myAccuracy, mySpeed, myHeading, myAltitude, myAltitudeAccuracy;  // Readings from the GPS.
 var setPebbleToken = "YNZX";
+var errorMessage;           // Error code if the location isn't returned correctly.
 var message;
 var labels = ["0"];         // Labels for the buttons.
 var urls = ["0"];           // Message URL for each button.
@@ -187,9 +188,22 @@ function locationSuccess(pos) {
 }
 
 function locationError(error) {
-  var dictionary = { "msg" : "Location error " + error.code + ": " + error.message };
-  sendMessage(dictionary); 
-  console.warn('!Location\nerror (' + error.code + '):\n' + error.message);
+  var dictionary;
+  switch(error.code) {
+    case error.PERMISSION_DENIED:
+      errorMessage  = "!Location\nrequest\ndenied" ;
+      break;
+    case error.POSITION_UNAVAILABLE:
+      errorMessage  =  "!Location\ninformation\nunavailable";
+      break;
+    case error.TIMEOUT:
+      errorMessage  = "!Location\nrequest\ntimeout";
+      break;
+    default:
+      errorMessage  = "!Unknown\nlocation\nerror";
+  }
+  console.log("over=" + samplingTimeOver, "sent=" + sentToServer, "first=" + firstOfRun, "watcher=" + locationWatcher);
+  console.warn('Location error ' + error.code + ': ' + error.message);
   if (samplingTimeOver) sendToServer();
 }
 
@@ -208,16 +222,14 @@ function sendToServer() {
   var xhr = new XMLHttpRequest();
   var url = encodeURI(urls[message]);
   var data = datas[message];
-  var address;
+  var address, dictionary;
   
   if (usegps[message]) {
     if (myAccuracy < 999999) /* we have a valid location */ {
       
       // Send location back to watch.
-      var dictionary = {
-        "msg" : (myLat>=0 ? myLat.toFixed(5)+"N" : (-myLat).toFixed(5)+"S") +
-          "\n" + (myLong>=0 ? myLong.toFixed(5)+"E" : (-myLong).toFixed(5)+"W") +
-          "\n\u00B1" + myAccuracy.toFixed(0) + "m"
+      dictionary = {
+        "msg" : (myLat>=0 ? myLat.toFixed(5)+"N" : (-myLat).toFixed(5)+"S") + "\n" + (myLong>=0 ? myLong.toFixed(5)+"E" : (-myLong).toFixed(5)+"W") + "\n\u00B1" + myAccuracy.toFixed(0) + "m"
       };
       sendMessage(dictionary); 
 
@@ -240,6 +252,9 @@ function sendToServer() {
         sendMessage(dictionary); 
         url = url.replace(/~Adr/g, encodeURIComponent(address));
       }
+    } else /* myAccuracy >= 999999, which means we didn't get a reading */ {
+      dictionary = { "msg" : errorMessage };
+      sendMessage(dictionary); 
     }
   }
   
@@ -290,18 +305,13 @@ function sendToServer() {
         (JSON.stringify((confirmation.length == 1) ? result : eval("result" + "." + confirmation.substr(1)))).substr(0,128) :
         (JSON.stringify(result).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "Message\nrejected by\nserver."))
     };
-  sendMessage(dictionary); 
+    sendMessage(dictionary); 
   };
   xhr.open(type, url);
   for (var i=0; i < headerarray.length - 1; i+=2) {
     xhr.setRequestHeader(headerarray[i],headerarray[i+1]);
     console.log("Set header " + headerarray[i] + " to " + headerarray[i+1]);
   }
-//  Was
-//   for (var i=0; i < (headerarray.length - 1) / 2; i++) {
-//     xhr.setRequestHeader(headerarray[2*i],headerarray[2*i+1]);
-//     console.log("Set header " + headerarray[2*i] + " to " + headerarray[2*i+1]);
-//   }
   xhr.send(data);
   console.log("Call made to server.");
 }  

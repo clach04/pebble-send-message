@@ -203,8 +203,8 @@ void in_received_handler(DictionaryIterator *iterator, void *context) {
     }
     snprintf(hint_text, sizeof(hint_text), "%s", message_tuple->value->cstring);
     if (hint_text[0] == '!') {
-      vibes_double_pulse();
       text_layer_set_text(hint_layer, &hint_text[1]);
+      vibes_double_pulse();
     } else
       text_layer_set_text(hint_layer, hint_text);   
   }
