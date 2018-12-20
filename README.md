@@ -6,7 +6,17 @@ Can be used for sending text messages or lots of other things when paired with a
 
 Allows configuration with three sets of label, URL to call, JSON data segment (if using POST), request headers and string to check for in the response to verify that the server accepted the message or a field from the response to display on the watch.
 
-In the URL and data, `~Lat` will be replaced with the latitude, `~Lon` with the longitude, `~Acc` with the accuracy, `~Alt` with the altitude, `~Spd` with the speed, `~Hed` with the heading, `~Lbl` with the label text, `~Adr` with your street address, `~Gmp` with a URL to your location on Google maps and `~Txt` with your dictated (or entered) text (several times if necessary, in which case you will be prompted up to three times).
+In the URL and data:
+  * `~Lat` will be replaced with the latitude
+  * `~Lon` with the longitude
+  * `~Acc` with the accuracy
+  * `~Alt` with the altitude
+  * `~Spd` with the speed
+  * `~Hed` with the heading
+  * `~Lbl` with the label text
+  * `~Adr` with your street address
+  * `~Gmp` with a URL to your location on Google maps
+  * `~Txt` with your dictated (or entered) text (several times if necessary, in which case you will be prompted up to three times).
 
 If you don't have a server of your own, you can use one of the many public SMS-sending services to send text messages for you, e.g.
 
