@@ -1,0 +1,29 @@
+{
+    "appKeys": {
+        "label1": 2,
+        "label2": 3,
+        "label3": 4,
+        "msg": 1
+    },
+    "capabilities": [
+        "location",
+        "configurable"
+    ],
+    "companyName": "peter@summers.aus.net",
+    "longName": "Send Message",
+    "projectType": "native",
+    "resources": {
+        "media": []
+    },
+    "sdkVersion": "3",
+    "shortName": "Send Message",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
+    "uuid": "5135b152-f9ad-40ff-987d-8f5ff4e31ea4",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
