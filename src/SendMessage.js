@@ -64,7 +64,7 @@ Pebble.addEventListener("ready", function(e) {
   };
   var transactionID = Pebble.sendAppMessage( dictionary,
     function(e) { console.log('Labels sent to Pebble successfully! ' + e.data.transactionId); },
-    function(e) { console.log('Error sending labels to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+    function(e) { console.log('Error sending labels to Pebble! ' + e.data.transactionId + ' Error is: ' + e.data.error.message); } ); 
 
   console.log("JavaScript app ready and running! " + e.type, e.ready, " runtime="+runtime, " imperial="+imperial, navigator.userAgent);
 });
@@ -200,7 +200,7 @@ Pebble.addEventListener("webviewclosed",
     };
   var transactionID = Pebble.sendAppMessage( dictionary,
     function(e) { console.log('Server response acknowledgement sent to Pebble successfully! ' + e.data.transactionId); },
-    function(e) { console.log('Error sending server response acknowledgement to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+    function(e) { console.log('Error sending server response acknowledgement to Pebble! ' + e.data.transactionId + ' Error is: ' + e.data.error.message); } ); 
   }
 );
                                                 
@@ -214,7 +214,7 @@ function appMessageAck(e) {
 }
 
 function appMessageNack(e) {
-  console.log("Message rejected by Pebble! " + e.error);
+  console.log("Message rejected by Pebble! " + e.data.error.message);
 }
 
 function getLocation() {
@@ -284,7 +284,7 @@ function sendMessage() {
     };
     var transactionID = Pebble.sendAppMessage( dictionary,
       function(e) { console.log('Location sent to Pebble successfully! ' + e.data.transactionId); },
-      function(e) { console.log('Error sending location to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+      function(e) { console.log('Error sending location to Pebble! ' + e.data.transactionId + ' Error is: ' + e.data.error.message); } ); 
     
     url = url.replace(/~Lat/g,myLat.toFixed(5));
     url = url.replace(/~Lon/g,myLong.toFixed(5));
@@ -304,7 +304,7 @@ function sendMessage() {
       dictionary = { "msg" : address };
       transactionID = Pebble.sendAppMessage( dictionary,
         function(e) { console.log('Address sent to Pebble successfully! ' + e.data.transactionId); },
-        function(e) { console.log('Error sending address to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+        function(e) { console.log('Error sending address to Pebble! ' + e.data.transactionId + ' Error is: ' + e.data.error.message); } ); 
       url = url.replace(/~Adr/g, encodeURIComponent(address));
     }
   }
@@ -355,7 +355,7 @@ function sendMessage() {
     };
     transactionID = Pebble.sendAppMessage( dictionary,
       function(e) { console.log('Server response sent to Pebble successfully! ' + e.data.transactionId); },
-      function(e) { console.log('Error sending server response to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+      function(e) { console.log('Error sending server response to Pebble! ' + e.data.transactionId + ' Error is: ' + e.data.error.message); } ); 
   };
   xhr.open(type, url);
   xhr.send(data);
@@ -368,7 +368,7 @@ function locationError(error) {
   };
   var transactionID = Pebble.sendAppMessage( dictionary,
     function(e) { console.log('Location sent to Pebble successfully! ' + e.data.transactionId); },
-    function(e) { console.log('Error sending location to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+    function(e) { console.log('Error sending location to Pebble! ' + e.data.transactionId + ' Error is: ' + e.data.error.message); } ); 
   
   console.warn('Location error (' + error.code + '): ' + error.message);
 }

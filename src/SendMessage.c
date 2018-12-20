@@ -28,7 +28,7 @@ static char hint_text[40];
 static GRect hint_layer_size;
 static uint8_t message;
 
-#ifdef PBL_COLOR
+#ifdef PBL_MICROPHONE
 static DictationSession *s_dictation_session[MAX_QUERIES];
 #else
 #include <tertiary_text.h>
@@ -70,7 +70,7 @@ static void send_message() {
 
 static void build_message() {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Building message %d of %d.", querynum, queries[message-1]);
-#ifdef PBL_COLOR
+#ifdef PBL_MICROPHONE
   if ((querynum < queries[message-1]) && (querynum < MAX_QUERIES) && (s_dictation_session[querynum]))
     dictation_session_start(s_dictation_session[querynum]);
 #else
@@ -81,7 +81,7 @@ else
   send_message();
 }
     
-#ifdef PBL_COLOR
+#ifdef PBL_MICROPHONE
 static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, char *transcription, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got to the callback.");
   if(status == DictationSessionStatusSuccess) {
@@ -264,7 +264,7 @@ static void window_load(Window *window) {
 #ifdef PBL_COLOR
   text_layer_set_background_color(message1_layer, GColorRajah);
 #else
-  text_layer_set_background_color(message1_layer, GColorClear);
+  text_layer_set_background_color(message1_layer, GColorLightGray);
 #endif  
   text_layer_set_font(message1_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_alignment(message1_layer, GTextAlignmentRight);
@@ -278,7 +278,7 @@ static void window_load(Window *window) {
 #ifdef PBL_COLOR
   text_layer_set_background_color(message2_layer, GColorSunsetOrange);
 #else
-  text_layer_set_background_color(message2_layer, GColorClear);
+  text_layer_set_background_color(message2_layer, GColorLightGray);
 #endif  
   text_layer_set_font(message2_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_alignment(message2_layer, GTextAlignmentRight);
@@ -292,7 +292,7 @@ static void window_load(Window *window) {
 #ifdef PBL_COLOR
   text_layer_set_background_color(message3_layer, GColorGreen);
 #else
-  text_layer_set_background_color(message3_layer, GColorClear);
+  text_layer_set_background_color(message3_layer, GColorLightGray);
 #endif  
   text_layer_set_font(message3_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   text_layer_set_text_alignment(message3_layer, GTextAlignmentRight);
@@ -326,14 +326,14 @@ static void init(void) {
     .unload = window_unload,
   });
   window_stack_push(window, true);
-#ifdef PBL_COLOR
+#ifdef PBL_MICROPHONE
   for (uint8_t i=0; i < MAX_QUERIES; i++)
     s_dictation_session[i] = dictation_session_create(sizeof(s_last_text), dictation_session_callback, NULL);
 #endif
 }
 
 static void deinit(void) {
-#ifdef PBL_COLOR
+#ifdef PBL_MICROPHONE
   for (uint8_t i=0; i < MAX_QUERIES; i++)
     dictation_session_destroy(s_dictation_session[i]);
 #endif
