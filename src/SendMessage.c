@@ -316,8 +316,8 @@ static void init(void) {
 #else
   hint_layer_size = GRect(16, 36, 112, 88);
 #endif
-  const uint32_t inbound_size = APP_MESSAGE_INBOX_SIZE_MINIMUM;
-  const uint32_t outbound_size = APP_MESSAGE_OUTBOX_SIZE_MINIMUM;
+  const uint32_t inbound_size = 256;                     // was APP_MESSAGE_INBOX_SIZE_MINIMUM;
+  const uint32_t outbound_size = 528 * MAX_QUERIES + 64; // was APP_MESSAGE_OUTBOX_SIZE_MINIMUM;
   app_message_open(inbound_size, outbound_size);
   window = window_create();
   window_set_click_config_provider(window, click_config_provider);

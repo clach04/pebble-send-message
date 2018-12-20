@@ -351,7 +351,9 @@ function sendMessage() {
     console.log("Response is " + JSON.stringify(result)); 
     // Send message to watch to acknowledge servers receipt of message.
     dictionary = {
-      "msg" : (JSON.stringify(result).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "Message\nrejected by\nserver.")
+      "msg" : (confirmation.length === 0) ? "Message\nreceived\nby server." : ((confirmation[0] == "~") ? 
+        (JSON.stringify((confirmation.length == 1) ? result : eval("result" + "." + confirmation.substr(1)))).substr(0,128) :
+        (JSON.stringify(result).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "Message\nrejected by\nserver."))
     };
     transactionID = Pebble.sendAppMessage( dictionary,
       function(e) { console.log('Server response sent to Pebble successfully! ' + e.data.transactionId); },
