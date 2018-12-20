@@ -136,6 +136,8 @@ Pebble.addEventListener("webviewclosed",
       urlanddata.match(/~Hed/) || urlanddata.match(/~Alt/) || urlanddata.match(/~Ala/) || urlanddata.match(/~Gmp/) || urlanddata.match(/~Adr/);
     
     for (var i=1; i<=3; i++) {
+      console.log("Label " + i + " set to: " + labels[i]);
+      localStorage.setItem("label"+i, labels[i]);
       console.log("URL " + i + " set to: " + urls[i]);
       localStorage.setItem("url"+i, urls[i]);
       console.log("Data " + i + " set to: " + datas[i]);
