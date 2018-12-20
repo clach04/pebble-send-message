@@ -28,8 +28,6 @@ var headers = ["0"];        // Header information to send.
 labels[1] = localStorage.getItem("label1") || "Please";
 labels[2] = localStorage.getItem("label2") || "set";
 labels[3] = localStorage.getItem("label3") || "configuration";
-var runtime = parseInt(localStorage.getItem("runtime")) || 5;        // How long to run the location watcher in seconds, or zero to do single reads;
-// var imperial = (parseInt(localStorage.getItem("imperial")) == 1);    // Default is metric measurements.
 
 for (var i=1; i<=3; i++) {
   urls[i] = localStorage.getItem("url"+i) || "";
@@ -46,6 +44,9 @@ for (var i=1; i<=3; i++) {
   clayConfig[i-1].items[4].defaultValue = headers[i];
   clayConfig[i-1].items[5].defaultValue = confirmations[i];
 }
+var runtime = parseInt(localStorage.getItem("runtime")) || 5;        // How long to run the location watcher in seconds, or zero to do single reads;
+clayConfig[3].items[0].defaultValue = (runtime === 0);
+
 var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 
 Pebble.addEventListener("ready", function(e) {
@@ -59,8 +60,8 @@ Pebble.addEventListener("ready", function(e) {
     "queries3" : queries[3]
   };
   sendMessage(dictionary); 
-  console.log("JavaScript app ready and running! " + e.type, e.ready, " runtime="+runtime, " imperial="+imperial, navigator.userAgent);
- initialized = true;
+  console.log("JavaScript app ready and running! " + e.type, e.ready, " runtime="+runtime, navigator.userAgent);
+  initialized = true;
 });
 
 Pebble.addEventListener("appmessage",
@@ -140,52 +141,10 @@ Pebble.addEventListener("webviewclosed",
       console.log("Queries " + i + " set to: " + queries[i]);
     }
     
-//     var options = JSON.parse(decodeURIComponent(e.response));
-//     console.log("Webview window returned: " + JSON.stringify(options));
-//     for (var i=1; i<=3; i++) {
-//       labels[i] = options[6*i-5];
-//       console.log("Label " + i + " set to: " + labels[i]);
-//       localStorage.setItem("label"+i, labels[i]);
-//       urls[i] = options[6*i-4] + options[6*i-3] + options[6*i-2] + options[6*i-1];
-//       confirmations[i] = options[6*i];
-//       var lastDividerLocation = confirmations[i].lastIndexOf("|");
-//       if (lastDividerLocation >= 0) {
-//         urls[i] += confirmations[i].slice(0,lastDividerLocation);
-//         confirmations[i] = confirmations[i].slice(lastDividerLocation+1);
-//       }
-//       queries[i] = (urls[i].match(/~Txt/g) || []).length;
-//       usegps[i] = urls[i].match(/~Lat/) || urls[i].match(/~Lon/) || urls[i].match(/~Acc/) || urls[i].match(/~Spd/) || 
-//         urls[i].match(/~Hed/) || urls[i].match(/~Alt/) || urls[i].match(/~Ala/) || urls[i].match(/~Gmp/) || urls[i].match(/~Adr/);
-//       var openCurlyBracketLocation = urls[i].indexOf("{");
-//       var closeCurlyBracketLocation = urls[i].lastIndexOf("}");
-//       if (openCurlyBracketLocation < 0) /* no "{"" found, so we'll do a GET */ {
-//         datas[i] = "";
-//         if (closeCurlyBracketLocation < 0) /* no "}" found => no headers */ {
-//           headers[i] = "";
-//         } else /* "}" found */ {
-//           headers[i] = urls[i].substring(closeCurlyBracketLocation+1, urls[i].length);
-//           urls[i] = urls[i].substring(0, closeCurlyBracketLocation);
-//         }
-//       } else /* valid "{" found, so we'll do a POST */ {
-//         if (closeCurlyBracketLocation > openCurlyBracketLocation) {
-//           headers[i] = urls[i].substring(closeCurlyBracketLocation+1, urls[i].length);
-//           datas[i] = urls[i].substring(openCurlyBracketLocation, closeCurlyBracketLocation+1);
-//           urls[i] = urls[i].substring(0, openCurlyBracketLocation);
-//         } else /* no valid "}" found => error */ {
-// //        Indicate an invalid data segment.
-//           dictionary = { "msg" : '"{" with no matching "}" in message '+i };
-//           sendMessage(dictionary); 
-//         }
-//       }
-//     }
-    
-//     imperial = (options["19"] === 1);
-//     console.log("Units set to: " + (imperial ? "imperial" : "metric"));
-//     localStorage.setItem("imperial", (imperial ? 1 : 0));
-//     runtime = parseInt(options["20"] || 5);
-//     console.log("RunTime set to: " + runtime);
-//     localStorage.setItem("runtime", runtime);
-    
+    runtime = values.quickgps.value ? 0 : 5;
+    localStorage.setItem("runtime", runtime);
+    console.log("Run time set to: " + runtime);
+
 //  Send labels to watch.
     dictionary = {
       "label1" : labels[1],

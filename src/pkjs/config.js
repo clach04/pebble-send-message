@@ -120,6 +120,12 @@ module.exports = [
   "type": "section",
   "items": [
     {
+      "type": "toggle",
+      "messageKey": "quickgps",
+      "label": "Quick GPS",
+      "description": "single GPS read (faster but less accurate)"
+    },
+    {
       "type": "submit",
       "defaultValue": "Save"
     }  
