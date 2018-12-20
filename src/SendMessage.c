@@ -260,46 +260,36 @@ static void click_config_provider(void *context) {
 
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
-#if defined(PBL_ROUND)
-  message1_layer = text_layer_create(GRect(18, 24, 144, 40));
-#else
-  message1_layer = text_layer_create(GRect(0, 12, 144, 40));
-#endif
+  GRect bounds = layer_get_bounds(window_layer);
+  
+  message1_layer = text_layer_create(GRect(0, bounds.size.h / 2 - 72, bounds.size.w, 40));
 #ifdef PBL_COLOR
   text_layer_set_background_color(message1_layer, GColorRajah);
 #else
   text_layer_set_background_color(message1_layer, GColorLightGray);
 #endif  
   text_layer_set_font(message1_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-  text_layer_set_text_alignment(message1_layer, GTextAlignmentRight);
+  text_layer_set_text_alignment(message1_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(message1_layer));
   
-#if defined(PBL_ROUND)
-  message2_layer = text_layer_create(GRect(18, 70, 144, 40));
-#else
-  message2_layer = text_layer_create(GRect(0, 64, 144, 40));
-#endif
+  message2_layer = text_layer_create(GRect(0, bounds.size.h / 2 - 20, bounds.size.w, 40));
 #ifdef PBL_COLOR
   text_layer_set_background_color(message2_layer, GColorSunsetOrange);
 #else
   text_layer_set_background_color(message2_layer, GColorLightGray);
 #endif  
   text_layer_set_font(message2_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-  text_layer_set_text_alignment(message2_layer, GTextAlignmentRight);
+  text_layer_set_text_alignment(message2_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(message2_layer));
   
-#if defined(PBL_ROUND)
-  message3_layer = text_layer_create(GRect(18, 116, 144, 40));
-#else
-  message3_layer = text_layer_create(GRect(0, 116, 144, 40));
-#endif
+  message3_layer = text_layer_create(GRect(0, bounds.size.h / 2 + 32, bounds.size.w, 40));
 #ifdef PBL_COLOR
   text_layer_set_background_color(message3_layer, GColorGreen);
 #else
   text_layer_set_background_color(message3_layer, GColorLightGray);
 #endif  
   text_layer_set_font(message3_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-  text_layer_set_text_alignment(message3_layer, GTextAlignmentRight);
+  text_layer_set_text_alignment(message3_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(message3_layer)); 
 }
 

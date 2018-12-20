@@ -25,9 +25,9 @@ var texts = ["0"];          // Up to three text strings to be inserted into the 
 var headers = ["0"];        // Header information to send.
 
 Pebble.addEventListener("ready", function(e) {
-  labels[1] = localStorage.getItem("label1") || "Please        ";
-  labels[2] = localStorage.getItem("label2") || "set           ";
-  labels[3] = localStorage.getItem("label3") || "configuration.";
+  labels[1] = localStorage.getItem("label1") || "Please";
+  labels[2] = localStorage.getItem("label2") || "set";
+  labels[3] = localStorage.getItem("label3") || "configuration";
   for (var i=1; i<=3; i++) {
     urls[i] = localStorage.getItem("url"+i) || "";
     datas[i] = localStorage.getItem("data"+i) || "";
