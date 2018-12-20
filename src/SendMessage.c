@@ -1,24 +1,40 @@
 #include <pebble.h>
-//#undef APP_LOG
-//#define APP_LOG(...)
+
+// #undef APP_LOG
+// #define APP_LOG(...)
   
 #define MSG_KEY 1
 #define LABEL1_KEY 2
 #define LABEL2_KEY 3
 #define LABEL3_KEY 4
+#define QUERY1_KEY 5
+#define QUERY2_KEY 6
+#define QUERY3_KEY 7
+#define TEXT1_KEY 8
+#define TEXT2_KEY 9
+#define TEXT3_KEY 10
+
+// If you want to change this, you'll need to define more keys above and edit the sendmessage function below and the javascript to use them.
+#define MAX_QUERIES 3
 
 static Window *window;
 static TextLayer *message1_layer;
 static TextLayer *message2_layer;
 static TextLayer *message3_layer;
 static char label[3][20];
+static uint8_t querynum, queries[MAX_QUERIES];
 static TextLayer *hint_layer;
 static char hint_text[40];
 static GRect hint_layer_size;
+static uint8_t message;
 
+#ifdef PBL_COLOR
+static DictationSession *s_dictation_session[MAX_QUERIES];
+static char s_last_text[MAX_QUERIES][512];
+#endif
 
-static void click_handler(uint8_t message) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Reset");
+static void send_message() {   
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Got to sending message.");
   if (hint_layer) {
     text_layer_destroy(hint_layer);
     hint_layer = NULL;
@@ -31,6 +47,11 @@ static void click_handler(uint8_t message) {
       return;
     }
     dict_write_uint8(iter, MSG_KEY, message);
+#ifdef PBL_COLOR
+    dict_write_cstring(iter, TEXT1_KEY, s_last_text[0]);
+    dict_write_cstring(iter, TEXT2_KEY, s_last_text[1]);
+    dict_write_cstring(iter, TEXT3_KEY, s_last_text[2]);
+#endif
     const uint32_t final_size = dict_write_end(iter);
     app_message_outbox_send();
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Sent message '%d' to phone! (%d bytes)", message, (int) final_size);
@@ -46,16 +67,58 @@ static void click_handler(uint8_t message) {
   }
 }
 
+static void build_message() {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Building message %d of %d.", querynum, queries[message-1]);
+#ifdef PBL_COLOR
+  if ((querynum < queries[message-1]) && (querynum < MAX_QUERIES))
+    dictation_session_start(s_dictation_session[querynum]);
+  else
+#endif
+  send_message();
+}
+    
+#ifdef PBL_COLOR
+static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, char *transcription, void *context) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Got to the callback.");
+  if(status == DictationSessionStatusSuccess) {
+    // Display the dictated text
+    APP_LOG(APP_LOG_LEVEL_DEBUG, transcription);
+    strncpy(s_last_text[querynum], transcription, sizeof(s_last_text[querynum]));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Got transcription %d of %d.", querynum, queries[message-1]);
+    querynum++;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "About to build message %d of %d.", querynum, queries[message-1]);
+    build_message();
+ } else {
+    // Display the reason for any error
+    snprintf(hint_text, sizeof(hint_text), "Transcription\nfailed.\nError:%d", (int)status);
+    if (!hint_layer) {
+      Layer *window_layer = window_get_root_layer(window);
+      hint_layer = text_layer_create(hint_layer_size);
+      text_layer_set_font(hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+      text_layer_set_text_alignment(hint_layer, GTextAlignmentCenter);
+      layer_add_child(window_layer, text_layer_get_layer(hint_layer));
+    }
+    text_layer_set_text(hint_layer, hint_text);
+  }
+}
+#endif
+
 static void up_handler(ClickRecognizerRef recognizer, void *context) {
-  click_handler(1);
+  message = 1;
+  querynum = 0;
+  build_message();
 }
 
 static void select_handler(ClickRecognizerRef recognizer, void *context) {
-  click_handler(2);
+  message = 2;
+  querynum = 0;
+  build_message();
 }
 
 static void down_handler(ClickRecognizerRef recognizer, void *context) {
-  click_handler(3);
+  message = 3;
+  querynum = 0;
+  build_message();
 }
 
 static void go_back_handler(ClickRecognizerRef recognizer, void *context) {
@@ -96,7 +159,6 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
 }
 
 void in_received_handler(DictionaryIterator *iterator, void *context) {
-  // incoming message received
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Incoming message received.");
 
   Tuple *message_tuple = dict_find(iterator, MSG_KEY);
@@ -129,7 +191,21 @@ void in_received_handler(DictionaryIterator *iterator, void *context) {
     snprintf(label[2], sizeof(label[2]), "%s ", label3_tuple->value->cstring);
     text_layer_set_text(message3_layer, label[2]);   
   }
-
+  Tuple *query1_tuple = dict_find(iterator, QUERY1_KEY);
+  if (query1_tuple) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG,"Got Query 1.");
+    queries[0] = query1_tuple->value->int8;
+  }
+  Tuple *query2_tuple = dict_find(iterator, QUERY2_KEY);
+  if (query2_tuple) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG,"Got Query 2.");
+    queries[1] = query2_tuple->value->int8;
+  }
+  Tuple *query3_tuple = dict_find(iterator, QUERY3_KEY);
+  if (query3_tuple) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG,"Got Query 3.");
+    queries[2] = query3_tuple->value->int8;
+  }
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
@@ -219,9 +295,17 @@ static void init(void) {
     .unload = window_unload,
   });
   window_stack_push(window, true);
+#ifdef PBL_COLOR
+  for (uint8_t i=0; i < MAX_QUERIES; i++)
+    s_dictation_session[i] = dictation_session_create(sizeof(s_last_text), dictation_session_callback, NULL);
+#endif
 }
 
 static void deinit(void) {
+#ifdef PBL_COLOR
+  for (uint8_t i=0; i < MAX_QUERIES; i++)
+    dictation_session_destroy(s_dictation_session[i]);
+#endif
   window_destroy(window);
 }
 
