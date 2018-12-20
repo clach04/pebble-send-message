@@ -30,8 +30,11 @@ static uint8_t message;
 
 #ifdef PBL_COLOR
 static DictationSession *s_dictation_session[MAX_QUERIES];
-static char s_last_text[MAX_QUERIES][512];
+#else
+#include <tertiary_text.h>
+void mytertiarytextcallback(const char* result, size_t result_length, void* extra);
 #endif
+static char s_last_text[MAX_QUERIES][512];
 
 static void send_message() {   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got to sending message.");
@@ -47,11 +50,9 @@ static void send_message() {
       return;
     }
     dict_write_uint8(iter, MSG_KEY, message);
-#ifdef PBL_COLOR
     dict_write_cstring(iter, TEXT1_KEY, s_last_text[0]);
     dict_write_cstring(iter, TEXT2_KEY, s_last_text[1]);
     dict_write_cstring(iter, TEXT3_KEY, s_last_text[2]);
-#endif
     const uint32_t final_size = dict_write_end(iter);
     app_message_outbox_send();
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Sent message '%d' to phone! (%d bytes)", message, (int) final_size);
@@ -69,11 +70,13 @@ static void send_message() {
 
 static void build_message() {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Building message %d of %d.", querynum, queries[message-1]);
-#ifdef PBL_COLOR
   if ((querynum < queries[message-1]) && (querynum < MAX_QUERIES))
+#ifdef PBL_COLOR
     dictation_session_start(s_dictation_session[querynum]);
-  else
+#else
+    tertiary_text_prompt(label[message-1], mytertiarytextcallback, NULL);
 #endif
+else
   send_message();
 }
     
@@ -100,6 +103,15 @@ static void dictation_session_callback(DictationSession *session, DictationSessi
     }
     text_layer_set_text(hint_layer, hint_text);
   }
+}
+#else
+void mytertiarytextcallback(const char* result, size_t result_length, void* extra) { 
+  APP_LOG(APP_LOG_LEVEL_DEBUG, result);
+  strncpy(s_last_text[querynum], result, sizeof(s_last_text[querynum]));
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Got result %d of %d.", querynum, queries[message-1]);
+  querynum++;
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "About to build message %d of %d.", querynum, queries[message-1]);
+  build_message();
 }
 #endif
 
