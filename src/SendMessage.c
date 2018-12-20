@@ -134,7 +134,7 @@ static void select_handler(ClickRecognizerRef recognizer, void *context) {
     text_layer_destroy(hint_layer);
     hint_layer = NULL;
   } else {
-     message = 2;
+    message = 2;
     querynum = 0;
     build_message();
   }
@@ -202,7 +202,11 @@ void in_received_handler(DictionaryIterator *iterator, void *context) {
       layer_add_child(window_layer, text_layer_get_layer(hint_layer));
     }
     snprintf(hint_text, sizeof(hint_text), "%s", message_tuple->value->cstring);
-    text_layer_set_text(hint_layer, hint_text);   
+    if (hint_text[0] == '!') {
+      vibes_double_pulse();
+      text_layer_set_text(hint_layer, &hint_text[1]);
+    } else
+      text_layer_set_text(hint_layer, hint_text);   
   }
   Tuple *label1_tuple = dict_find(iterator, LABEL1_KEY);
   if (label1_tuple) {
