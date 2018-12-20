@@ -221,15 +221,16 @@ function sendMessage() {
   
   var label = labels[message];
 
-  var url = urls[message];
-  url = url.replace("~Lat",myLat.toFixed(5));
-  url = url.replace("~Lon",myLong.toFixed(5));
-  url = url.replace("~Acc",myAccuracy.toFixed(0));
-  try {url = url.replace("~Spd",mySpeed.toFixed(0));} catch(err) {url = url.replace("~Spd","-1");}
-  try {url = url.replace("~Hed",myHeading.toFixed(0));} catch(err) {url = url.replace("~Hed","-1");}
-  try {url = url.replace("~Alt",myAltitude.toFixed(0));} catch(err) {url = url.replace("~Alt","-1");}
-  try {url = url.replace("~Ala",myAltitudeAccuracy.toFixed(0));} catch(err) {url = url.replace("~Ala","-1");}
-  url = url.replace("~Lbl",label);
+  var url = encodeURI(urls[message]);
+  url = url.replace(/~Lat/g,myLat.toFixed(5));
+  url = url.replace(/~Lon/g,myLong.toFixed(5));
+  url = url.replace(/~Acc/g,myAccuracy.toFixed(0));
+  try {url = url.replace(/~Spd/g,mySpeed.toFixed(0));} catch(err) {url = url.replace(/~Spd/g,"-1");}
+  try {url = url.replace(/~Hed/g,myHeading.toFixed(0));} catch(err) {url = url.replace(/~Hed/g,"-1");}
+  try {url = url.replace(/~Alt/g,myAltitude.toFixed(0));} catch(err) {url = url.replace(/~Alt/g,"-1");}
+  try {url = url.replace(/~Ala/g,myAltitudeAccuracy.toFixed(0));} catch(err) {url = url.replace(/~Ala/g,"-1");}
+  url = url.replace(/~Gmp/g,"https%3A%2F%2Fwww.google.com%2Fmaps%3Fq%3Dloc%3A" + myLat.toFixed(5) + "%2C" + myLong.toFixed(5));
+  url = url.replace(/~Lbl/g,encodeURIComponent(label));
   
   var data = datas[message];
   var type;
@@ -237,14 +238,15 @@ function sendMessage() {
     type = "GET";
   else {
     type = "POST";
-    data = data.replace("~Lat",myLat.toFixed(5));
-    data = data.replace("~Lon",myLong.toFixed(5));
-    data = data.replace("~Acc",myAccuracy.toFixed(0));
-    try {data = data.replace("~Spd",mySpeed.toFixed(0));} catch(err) {data = data.replace("~Spd","-1");}
-    try {data = data.replace("~Hed",myHeading.toFixed(0));} catch(err) {data = data.replace("~Hed","-1");}
-    try {data = data.replace("~Alt",myAltitude.toFixed(0));} catch(err) {data = data.replace("~Alt","-1");}
-    try {data = data.replace("~Ala",myAltitudeAccuracy.toFixed(0));} catch(err) {data = data.replace("~Ala","-1");}
-    data = data.replace("~Lbl", label);
+    data = data.replace(/~Lat/g,myLat.toFixed(5));
+    data = data.replace(/~Lon/g,myLong.toFixed(5));
+    data = data.replace(/~Acc/g,myAccuracy.toFixed(0));
+    try {data = data.replace(/~Spd/g,mySpeed.toFixed(0));} catch(err) {data = data.replace(/~Spd/g,"-1");}
+    try {data = data.replace(/~Hed/g,myHeading.toFixed(0));} catch(err) {data = data.replace(/~Hed/g,"-1");}
+    try {data = data.replace(/~Alt/g,myAltitude.toFixed(0));} catch(err) {data = data.replace(/~Alt/g,"-1");}
+    try {data = data.replace(/~Ala/g,myAltitudeAccuracy.toFixed(0));} catch(err) {data = data.replace(/~Ala/g,"-1");}
+    data = data.replace(/~Gmp/g,"https://www.google.com/maps?q=loc:" + myLat.toFixed(5) + "," + myLong.toFixed(5));
+    data = data.replace(/~Lbl/g, label);
   }
   
   var confirmation = confirmations[message];
