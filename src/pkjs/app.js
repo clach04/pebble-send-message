@@ -319,16 +319,19 @@ function sendToServer() {
   console.log("confirmation= " + confirmation);
   
   // Send request.
-  xhr.onload = function (result) { 
-    console.log("Response is " + JSON.stringify(result)); 
+  xhr.onload = function (response) { 
+    console.log("Response is " + JSON.stringify(response)); 
     // Send message to watch to acknowledge servers receipt of message.
     dictionary = {
       "msg" : (confirmation.length === 0) ? "Message\nreceived\nby server." : ((confirmation[0] == "~") ? 
-        (JSON.stringify((confirmation.length == 1) ? result : eval("result" + "." + confirmation.substr(1)))).substr(0,128) :
-        (JSON.stringify(result).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "Message\nrejected by\nserver."))
+        (JSON.stringify((confirmation.length == 1) ? response : eval("response" + "." + confirmation.substr(1)))) :
+        (JSON.stringify(response).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "Message\nrejected by\nserver."))
     };
-    sendMessage(dictionary); 
-    if (displayResponse) Pebble.showSimpleNotificationOnPebble("Got response", JSON.stringify(result));
+    if (dictionary.msg.length <= 30)
+      sendMessage(dictionary); 
+    else
+      Pebble.showSimpleNotificationOnPebble("Result:", dictionary.msg);
+    if (displayResponse) Pebble.showSimpleNotificationOnPebble("Response:", JSON.stringify(response));
   };
   xhr.open(type, url);
   for (var i=0; i < headerarray.length - 1; i+=2) {
