@@ -114,19 +114,19 @@ void in_received_handler(DictionaryIterator *iterator, void *context) {
   Tuple *label1_tuple = dict_find(iterator, LABEL1_KEY);
   if (label1_tuple) {
     APP_LOG(APP_LOG_LEVEL_DEBUG,"Got Label 1.");
-    snprintf(label[0], sizeof(label[0]), "%s", label1_tuple->value->cstring);
+    snprintf(label[0], sizeof(label[0]), "%s ", label1_tuple->value->cstring);
     text_layer_set_text(message1_layer, label[0]);   
   }
   Tuple *label2_tuple = dict_find(iterator, LABEL2_KEY);
   if (label2_tuple) {
     APP_LOG(APP_LOG_LEVEL_DEBUG,"Got Label 2.");
-    snprintf(label[1], sizeof(label[1]), "%s", label2_tuple->value->cstring);
+    snprintf(label[1], sizeof(label[1]), "%s ", label2_tuple->value->cstring);
     text_layer_set_text(message2_layer, label[1]);   
   }
   Tuple *label3_tuple = dict_find(iterator, LABEL3_KEY);
   if (label3_tuple) {
     APP_LOG(APP_LOG_LEVEL_DEBUG,"Got Label 3.");
-    snprintf(label[2], sizeof(label[2]), "%s", label3_tuple->value->cstring);
+    snprintf(label[2], sizeof(label[2]), "%s ", label3_tuple->value->cstring);
     text_layer_set_text(message3_layer, label[2]);   
   }
 

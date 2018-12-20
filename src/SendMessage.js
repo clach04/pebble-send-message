@@ -215,7 +215,7 @@ function sendMessage() {
   };
   var transactionID = Pebble.sendAppMessage( dictionary,
     function(e) { console.log('Location sent to Pebble successfully! ' + e.data.transactionId); },
-    function(e) { console.log('Error sending location info to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+    function(e) { console.log('Error sending location to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
   
 //  Build request for server.
   
@@ -234,6 +234,7 @@ function sendMessage() {
   
   var data = datas[message];
   var type;
+
   if (data === "")
     type = "GET";
   else {
@@ -250,28 +251,54 @@ function sendMessage() {
   }
   
   var confirmation = confirmations[message];
+
+  var xhr = new XMLHttpRequest();
+  var address;
   
+  if ((url+data).indexOf("~Adr") >= 0) {
+    xhr.open("GET", "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + myLat.toFixed(5) + "," + myLong.toFixed(5), false);
+    xhr.send();
+    address = JSON.parse(xhr.responseText).results[0].formatted_address;
+    console.log("Address = " + address);
+    // Send message to watch to show address.
+    dictionary = {
+      "msg" : address
+    };
+    transactionID = Pebble.sendAppMessage( dictionary,
+      function(e) { console.log('Address sent to Pebble successfully! ' + e.data.transactionId); },
+      function(e) { console.log('Error sending address to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+    url = url.replace(/~Adr/g, encodeURIComponent(address));
+    data = data.replace(/~Adr/g, address);
+  }
+
   console.log("url = " + url);
   console.log("type= " + type);
   console.log("data= " + data);
   console.log("confirmation= " + confirmation);
   
   // Send request.
-  var xhr = new XMLHttpRequest();
   xhr.onload = function (result) { 
     console.log("Response is " + JSON.stringify(result)); 
     // Send message to watch to acknowledge servers receipt of message.
-    var dictionary = {
+    dictionary = {
       "msg" : (JSON.stringify(result).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "Message\nrejected by\nserver.")
     };
-    var transactionID = Pebble.sendAppMessage( dictionary,
-      function(e) { console.log('Server response acknowledgement sent to Pebble successfully! ' + e.data.transactionId); },
-      function(e) { console.log('Error sending server response acknowledgement to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+    transactionID = Pebble.sendAppMessage( dictionary,
+      function(e) { console.log('Server response sent to Pebble successfully! ' + e.data.transactionId); },
+      function(e) { console.log('Error sending server response to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
   };
   xhr.open(type, url);
   xhr.send(data);
+  console.log("Call made to server.");
 }  
 
 function locationError(error) {
+  var dictionary = {
+    "msg" : "Error\nacquiring\nlocation."
+  };
+  var transactionID = Pebble.sendAppMessage( dictionary,
+    function(e) { console.log('Location sent to Pebble successfully! ' + e.data.transactionId); },
+    function(e) { console.log('Error sending location to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+  
   console.warn('Location error (' + error.code + '): ' + error.message);
 }
