@@ -1,7 +1,7 @@
 #include <pebble.h>
 
-// #undef APP_LOG
-// #define APP_LOG(...)
+#undef APP_LOG
+#define APP_LOG(...)
   
 #define MSG_KEY 1
 #define LABEL1_KEY 2

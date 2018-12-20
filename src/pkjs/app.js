@@ -1,5 +1,5 @@
 // Disable console for production or comment this line out to enable it for debugging.
-//console.log = function() {};
+console.log = function() {};
 
 var Clay = require('pebble-clay');
 var clayConfig = require('./config');
@@ -8,10 +8,10 @@ var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 var initialized = false;
 var myLat = 0;
 var myLong = 0;
-var locationWatcher;     // The Watcher that manages the readings from the GPS that are used to get a result to return to the watch.
-var locationTimer;       // The Timer that gets a result at the end of the run of readings;
-var firstOfRun;          // True for the first result in a run, which is old invalid data for some weird reason.
-var sentToServer;         // True when a set of readings has finished and the result is going to be sent to the watch.
+var locationWatcher;       // The Watcher that manages the readings from the GPS that are used to get a result to return to the watch.
+var locationTimer;         // The Timer that gets a result at the end of the run of readings;
+var firstOfRun;            // True for the first result in a run, which is old invalid data for some weird reason.
+var gettingLocation;        // True when a button has been pressed but we've not sent the message to the server yet.
 var samplingTimeOver = true;  // True when the sampling time is over and the next reading will be the last.
 var locationOptions = {timeout: 4000, maximumAge: 0, enableHighAccuracy: true };
 var myAccuracy, mySpeed, myHeading, myAltitude, myAltitudeAccuracy;  // Readings from the GPS.
@@ -83,6 +83,7 @@ Pebble.addEventListener("appmessage",
       texts[2] = e.payload.text2;
       texts[3] = e.payload.text3;
       console.log("Got command: " + message);
+      gettingLocation = true;
       if (usegps[message])
         getLocation();
       else
@@ -180,7 +181,6 @@ Pebble.addEventListener("webviewclosed",
 function getLocation() {
 //   if (!samplingTimeOver) sendToServer();
   myAccuracy = 999999;
-  sentToServer = false;
   if (runtime === 0) {
     samplingTimeOver = true;
     firstOfRun = false;
@@ -195,7 +195,7 @@ function getLocation() {
 
 function locationSuccess(pos) {
   console.log("lat=" + pos.coords.latitude, "long=" + pos.coords.longitude, "accuracy=" + pos.coords.accuracy + " at " + pos.timestamp);
-  console.log("over=" + samplingTimeOver, "sent=" + sentToServer, "first=" + firstOfRun, "watcher=" + locationWatcher);
+  console.log("over=" + samplingTimeOver, "getting=" + gettingLocation, "first=" + firstOfRun, "watcher=" + locationWatcher);
   if (!firstOfRun) {   // First reads bring back old data so we avoid using them. //
     if (pos.coords.accuracy <= myAccuracy) {
       myAccuracy = pos.coords.accuracy;
@@ -213,7 +213,6 @@ function locationSuccess(pos) {
 }
 
 function locationError(error) {
-  var dictionary;
   switch(error.code) {
     case error.PERMISSION_DENIED:
       errorMessage  = "!Location\nrequest\ndenied" ;
@@ -227,7 +226,7 @@ function locationError(error) {
     default:
       errorMessage  = "!Unknown\nlocation\nerror";
   }
-  console.log("over=" + samplingTimeOver, "sent=" + sentToServer, "first=" + firstOfRun, "watcher=" + locationWatcher);
+  console.log("over=" + samplingTimeOver, "getting=" + gettingLocation, "first=" + firstOfRun, "watcher=" + locationWatcher);
   console.warn('Location error ' + error.code + ': ' + error.message);
   if (samplingTimeOver) sendToServer();
 }
@@ -235,10 +234,11 @@ function locationError(error) {
 function sendToServer() {
   navigator.geolocation.clearWatch(locationWatcher);
   clearTimeout(locationTimer);
-  if (sentToServer) return;
-  sentToServer = true;
+  if (!gettingLocation) return;                 // Ensures that we only send the message once for each button press.
+  gettingLocation = false;
 
   //  Build request for server.
+  console.log("Sending to server...");
   var label = labels[message];
   console.log("String 1 = " + texts[1]);
   console.log("String 2 = " + texts[2]);
