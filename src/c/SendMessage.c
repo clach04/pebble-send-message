@@ -31,7 +31,7 @@ static uint8_t message;
 #ifdef PBL_MICROPHONE
 static DictationSession *s_dictation_session[MAX_QUERIES];
 #else
-#include <tertiary_text.h>
+#include "tertiary_text.h"
 void mytertiarytextcallback(const char* result, size_t result_length, void* extra);
 #endif
 static char s_last_text[MAX_QUERIES][512];
