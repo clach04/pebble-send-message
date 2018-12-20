@@ -1,6 +1,8 @@
 {
     "author": "peter@summers.aus.net",
-    "dependencies": {},
+    "dependencies": {
+        "pebble-clay": "^1.0.0"
+    },
     "keywords": [],
     "name": "send-message",
     "pebble": {
@@ -9,7 +11,7 @@
             "configurable"
         ],
         "displayName": "Send Message",
-        "enableMultiJS": false,
+        "enableMultiJS": true,
         "messageKeys": {
             "label1": 2,
             "label2": 3,
@@ -46,5 +48,5 @@
             "watchface": false
         }
     },
-    "version": "4.5.0"
+    "version": "5.0.0"
 }

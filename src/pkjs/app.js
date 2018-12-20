@@ -1,11 +1,12 @@
 // Disable console for production or comment this line out to enable it for debugging.
 //console.log = function() {};
 
+var Clay = require('pebble-clay');
+var clayConfig = require('./config');
+
 var initialized = false;
-var runtime;             // How long to run the location watcher in seconds, or zero to do single reads;
 var myLat = 0;
 var myLong = 0;
-var imperial = false;    // Default is metric measurements.
 var locationWatcher;     // The Watcher that manages the readings from the GPS that are used to get a result to return to the watch.
 var locationTimer;       // The Timer that gets a result at the end of the run of readings;
 var firstOfRun;          // True for the first result in a run, which is old invalid data for some weird reason.
@@ -13,7 +14,7 @@ var sentToServer;         // True when a set of readings has finished and the re
 var samplingTimeOver = true;  // True when the sampling time is over and the next reading will be the last.
 var locationOptions = {timeout: 4000, maximumAge: 0, enableHighAccuracy: true };
 var myAccuracy, mySpeed, myHeading, myAltitude, myAltitudeAccuracy;  // Readings from the GPS.
-var setPebbleToken = "YNZX";
+// var setPebbleToken = "YNZX";
 var errorMessage;           // Error code if the location isn't returned correctly.
 var message;
 var labels = ["0"];         // Labels for the buttons.
@@ -24,25 +25,30 @@ var queries = ["0"];        // Number of dictated text queries for each button.
 var usegps = ["0"];         // Tracks whether to call the GPS.
 var texts = ["0"];          // Up to three text strings to be inserted into the message.
 var headers = ["0"];        // Header information to send.
+labels[1] = localStorage.getItem("label1") || "Please";
+labels[2] = localStorage.getItem("label2") || "set";
+labels[3] = localStorage.getItem("label3") || "configuration";
+var runtime = parseInt(localStorage.getItem("runtime")) || 5;        // How long to run the location watcher in seconds, or zero to do single reads;
+// var imperial = (parseInt(localStorage.getItem("imperial")) == 1);    // Default is metric measurements.
+
+for (var i=1; i<=3; i++) {
+  urls[i] = localStorage.getItem("url"+i) || "";
+  datas[i] = localStorage.getItem("data"+i) || "";
+  headers[i] = localStorage.getItem("header"+i) || "";
+  confirmations[i] = localStorage.getItem("confirmation"+i) || "";
+  queries[i] = ((urls[i] + datas[i]).match(/~Txt/g) || []).length;
+  var temp = urls[i] + datas[i];
+  usegps[i] = temp.match(/~Lat/) || temp.match(/~Lon/) || temp.match(/~Acc/) || temp.match(/~Spd/) || 
+    temp.match(/~Hed/) || temp.match(/~Alt/) || temp.match(/~Ala/) || temp.match(/~Gmp/) || temp.match(/~Adr/);
+  clayConfig[i-1].items[1].defaultValue = labels[i];
+  clayConfig[i-1].items[2].defaultValue = urls[i];
+  clayConfig[i-1].items[3].defaultValue = datas[i];
+  clayConfig[i-1].items[4].defaultValue = headers[i];
+  clayConfig[i-1].items[5].defaultValue = confirmations[i];
+}
+var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 
 Pebble.addEventListener("ready", function(e) {
-  labels[1] = localStorage.getItem("label1") || "Please";
-  labels[2] = localStorage.getItem("label2") || "set";
-  labels[3] = localStorage.getItem("label3") || "configuration";
-  for (var i=1; i<=3; i++) {
-    urls[i] = localStorage.getItem("url"+i) || "";
-    datas[i] = localStorage.getItem("data"+i) || "";
-    headers[i] = localStorage.getItem("header"+i) || "";
-    confirmations[i] = localStorage.getItem("confirmation"+i) || "";
-    queries[i] = ((urls[i] + datas[i]).match(/~Txt/g) || []).length;
-    var temp = urls[i] + datas[i];
-    usegps[i] = temp.match(/~Lat/) || temp.match(/~Lon/) || temp.match(/~Acc/) || temp.match(/~Spd/) || 
-      temp.match(/~Hed/) || temp.match(/~Alt/) || temp.match(/~Ala/) || temp.match(/~Gmp/) || temp.match(/~Adr/);
-   }
-  runtime = parseInt(localStorage.getItem("runtime")) || 5;
-  imperial = (parseInt(localStorage.getItem("imperial")) == 1);
-  initialized = true;
-
   // Send labels to watch.
   var dictionary = {
     "label1" : labels[1],
@@ -54,6 +60,7 @@ Pebble.addEventListener("ready", function(e) {
   };
   sendMessage(dictionary); 
   console.log("JavaScript app ready and running! " + e.type, e.ready, " runtime="+runtime, " imperial="+imperial, navigator.userAgent);
+ initialized = true;
 });
 
 Pebble.addEventListener("appmessage",
@@ -75,7 +82,8 @@ Pebble.addEventListener("appmessage",
 
 Pebble.addEventListener("showConfiguration",
   function() {
-    var uri = "http://x.setpebble.com/" + setPebbleToken + "/" + Pebble.getAccountToken();
+//     var uri = "http://x.setpebble.com/" + setPebbleToken + "/" + Pebble.getAccountToken();
+    var uri = clay.generateUrl();
     console.log("Configuration url: " + uri);
     Pebble.openURL(uri);
   }
@@ -83,44 +91,44 @@ Pebble.addEventListener("showConfiguration",
 
 Pebble.addEventListener("webviewclosed",
   function(e) {
-    var options = JSON.parse(decodeURIComponent(e.response));
+    if (e && !e.response) {
+      return;
+    }
     var dictionary;
-    console.log("Webview window returned: " + JSON.stringify(options));
+    var values = clay.getSettings(e.response, false);
+    console.log("values = " + JSON.stringify(values));
+    
+    labels[1] = values.label1.value;
+    urls[1] = values.url1.value;
+    datas[1] = values.data1.value;
+    headers[1] = values.header1.value;
+    confirmations[1] = values.confirm1.value;
+    var urlanddata = urls[1] + datas[1];
+    queries[1] = (urlanddata.match(/~Txt/g) || []).length;
+    usegps[1] = urlanddata.match(/~Lat/) || urlanddata.match(/~Lon/) || urlanddata.match(/~Acc/) || urlanddata.match(/~Spd/) || 
+      urlanddata.match(/~Hed/) || urlanddata.match(/~Alt/) || urlanddata.match(/~Ala/) || urlanddata.match(/~Gmp/) || urlanddata.match(/~Adr/);
+    
+    labels[2] = values.label2.value;
+    urls[2] = values.url2.value;
+    datas[2] = values.data2.value;
+    headers[2] = values.header2.value;
+    confirmations[2] = values.confirm2.value;
+    urlanddata = urls[2] + datas[2];
+    queries[2] = (urlanddata.match(/~Txt/g) || []).length;
+    usegps[2] = urlanddata.match(/~Lat/) || urlanddata.match(/~Lon/) || urlanddata.match(/~Acc/) || urlanddata.match(/~Spd/) || 
+      urlanddata.match(/~Hed/) || urlanddata.match(/~Alt/) || urlanddata.match(/~Ala/) || urlanddata.match(/~Gmp/) || urlanddata.match(/~Adr/);
+    
+    labels[3] = values.label3.value;
+    urls[3] = values.url3.value;
+    datas[3] = values.data3.value;
+    headers[3] = values.header3.value;
+    confirmations[3] = values.confirm3.value;
+    urlanddata = urls[3] + datas[3];
+    queries[3] = (urlanddata.match(/~Txt/g) || []).length;
+    usegps[3] = urlanddata.match(/~Lat/) || urlanddata.match(/~Lon/) || urlanddata.match(/~Acc/) || urlanddata.match(/~Spd/) || 
+      urlanddata.match(/~Hed/) || urlanddata.match(/~Alt/) || urlanddata.match(/~Ala/) || urlanddata.match(/~Gmp/) || urlanddata.match(/~Adr/);
+    
     for (var i=1; i<=3; i++) {
-      labels[i] = options[6*i-5];
-      console.log("Label " + i + " set to: " + labels[i]);
-      localStorage.setItem("label"+i, labels[i]);
-      urls[i] = options[6*i-4] + options[6*i-3] + options[6*i-2] + options[6*i-1];
-      confirmations[i] = options[6*i];
-      var lastDividerLocation = confirmations[i].lastIndexOf("|");
-      if (lastDividerLocation >= 0) {
-        urls[i] += confirmations[i].slice(0,lastDividerLocation);
-        confirmations[i] = confirmations[i].slice(lastDividerLocation+1);
-      }
-      queries[i] = (urls[i].match(/~Txt/g) || []).length;
-      usegps[i] = urls[i].match(/~Lat/) || urls[i].match(/~Lon/) || urls[i].match(/~Acc/) || urls[i].match(/~Spd/) || 
-        urls[i].match(/~Hed/) || urls[i].match(/~Alt/) || urls[i].match(/~Ala/) || urls[i].match(/~Gmp/) || urls[i].match(/~Adr/);
-      var openCurlyBracketLocation = urls[i].indexOf("{");
-      var closeCurlyBracketLocation = urls[i].lastIndexOf("}");
-      if (openCurlyBracketLocation < 0) /* no "{"" found, so we'll do a GET */ {
-        datas[i] = "";
-        if (closeCurlyBracketLocation < 0) /* no "}" found => no headers */ {
-          headers[i] = "";
-        } else /* "}" found */ {
-          headers[i] = urls[i].substring(closeCurlyBracketLocation+1, urls[i].length);
-          urls[i] = urls[i].substring(0, closeCurlyBracketLocation);
-        }
-      } else /* valid "{" found, so we'll do a POST */ {
-        if (closeCurlyBracketLocation > openCurlyBracketLocation) {
-          headers[i] = urls[i].substring(closeCurlyBracketLocation+1, urls[i].length);
-          datas[i] = urls[i].substring(openCurlyBracketLocation, closeCurlyBracketLocation+1);
-          urls[i] = urls[i].substring(0, openCurlyBracketLocation);
-        } else /* no valid "}" found => error */ {
-//        Indicate an invalid data segment.
-          dictionary = { "msg" : '"{" with no matching "}" in message '+i };
-          sendMessage(dictionary); 
-        }
-      }
       console.log("URL " + i + " set to: " + urls[i]);
       localStorage.setItem("url"+i, urls[i]);
       console.log("Data " + i + " set to: " + datas[i]);
@@ -131,6 +139,45 @@ Pebble.addEventListener("webviewclosed",
       localStorage.setItem("confirmation"+i, confirmations[i]);
       console.log("Queries " + i + " set to: " + queries[i]);
     }
+    
+//     var options = JSON.parse(decodeURIComponent(e.response));
+//     console.log("Webview window returned: " + JSON.stringify(options));
+//     for (var i=1; i<=3; i++) {
+//       labels[i] = options[6*i-5];
+//       console.log("Label " + i + " set to: " + labels[i]);
+//       localStorage.setItem("label"+i, labels[i]);
+//       urls[i] = options[6*i-4] + options[6*i-3] + options[6*i-2] + options[6*i-1];
+//       confirmations[i] = options[6*i];
+//       var lastDividerLocation = confirmations[i].lastIndexOf("|");
+//       if (lastDividerLocation >= 0) {
+//         urls[i] += confirmations[i].slice(0,lastDividerLocation);
+//         confirmations[i] = confirmations[i].slice(lastDividerLocation+1);
+//       }
+//       queries[i] = (urls[i].match(/~Txt/g) || []).length;
+//       usegps[i] = urls[i].match(/~Lat/) || urls[i].match(/~Lon/) || urls[i].match(/~Acc/) || urls[i].match(/~Spd/) || 
+//         urls[i].match(/~Hed/) || urls[i].match(/~Alt/) || urls[i].match(/~Ala/) || urls[i].match(/~Gmp/) || urls[i].match(/~Adr/);
+//       var openCurlyBracketLocation = urls[i].indexOf("{");
+//       var closeCurlyBracketLocation = urls[i].lastIndexOf("}");
+//       if (openCurlyBracketLocation < 0) /* no "{"" found, so we'll do a GET */ {
+//         datas[i] = "";
+//         if (closeCurlyBracketLocation < 0) /* no "}" found => no headers */ {
+//           headers[i] = "";
+//         } else /* "}" found */ {
+//           headers[i] = urls[i].substring(closeCurlyBracketLocation+1, urls[i].length);
+//           urls[i] = urls[i].substring(0, closeCurlyBracketLocation);
+//         }
+//       } else /* valid "{" found, so we'll do a POST */ {
+//         if (closeCurlyBracketLocation > openCurlyBracketLocation) {
+//           headers[i] = urls[i].substring(closeCurlyBracketLocation+1, urls[i].length);
+//           datas[i] = urls[i].substring(openCurlyBracketLocation, closeCurlyBracketLocation+1);
+//           urls[i] = urls[i].substring(0, openCurlyBracketLocation);
+//         } else /* no valid "}" found => error */ {
+// //        Indicate an invalid data segment.
+//           dictionary = { "msg" : '"{" with no matching "}" in message '+i };
+//           sendMessage(dictionary); 
+//         }
+//       }
+//     }
     
 //     imperial = (options["19"] === 1);
 //     console.log("Units set to: " + (imperial ? "imperial" : "metric"));
