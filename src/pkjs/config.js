@@ -126,6 +126,18 @@ module.exports = [
       "description": "single GPS read (faster but less accurate)"
     },
     {
+      "type": "toggle",
+      "messageKey": "displaymessage",
+      "label": "Display message:",
+      "description": "display the message (for debugging)"
+    },
+    {
+      "type": "toggle",
+      "messageKey": "displayresponse",
+      "label": "Display response:",
+      "description": "display the response (for debugging)"
+    },
+    {
       "type": "submit",
       "defaultValue": "Save"
     }  

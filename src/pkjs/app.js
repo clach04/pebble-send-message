@@ -47,6 +47,12 @@ for (var i=1; i<=3; i++) {
 var runtime = parseInt(localStorage.getItem("runtime")) || 5;        // How long to run the location watcher in seconds, or zero to do single reads;
 clayConfig[3].items[0].defaultValue = (runtime === 0);
 
+var displayMessage = (localStorage.getItem("displaymessage") == "1");  // Whether to display the message sent for debugging;
+clayConfig[3].items[1].defaultValue = displayMessage;
+
+var displayResponse = (localStorage.getItem("displayresponse") == "1");  // Whether to display the message sent for debugging;
+clayConfig[3].items[2].defaultValue = displayResponse;
+
 var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 
 Pebble.addEventListener("ready", function(e) {
@@ -135,7 +141,7 @@ Pebble.addEventListener("webviewclosed",
       console.log("Data " + i + " set to: " + datas[i]);
       localStorage.setItem("data"+i, datas[i]);
       console.log("Header " + i + " set to: " + headers[i]);
-      localStorage.setItem("hearder"+i, headers[i]);
+      localStorage.setItem("header"+i, headers[i]);
       console.log("Confirmation " + i + " set to: " + confirmations[i]);
       localStorage.setItem("confirmation"+i, confirmations[i]);
       console.log("Queries " + i + " set to: " + queries[i]);
@@ -144,6 +150,14 @@ Pebble.addEventListener("webviewclosed",
     runtime = values.quickgps.value ? 0 : 5;
     localStorage.setItem("runtime", runtime);
     console.log("Run time set to: " + runtime);
+
+    displayMessage = values.displaymessage.value;
+    localStorage.setItem("displaymessage", displayMessage ? 1 : 0);
+    console.log("Display message set to: " + displayMessage);
+
+    displayResponse = values.displayresponse.value;
+    localStorage.setItem("displayResponse", displayResponse ? 1 : 0);
+    console.log("Display response set to: " + displayResponse);
 
 //  Send labels to watch.
     dictionary = {
@@ -312,6 +326,7 @@ function sendToServer() {
         (JSON.stringify(result).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "Message\nrejected by\nserver."))
     };
     sendMessage(dictionary); 
+    if (displayResponse) Pebble.showSimpleNotificationOnPebble("Got response", JSON.stringify(result));
   };
   xhr.open(type, url);
   for (var i=0; i < headerarray.length - 1; i+=2) {
@@ -320,6 +335,7 @@ function sendToServer() {
   }
   xhr.send(data);
   console.log("Call made to server.");
+  if (displayMessage) Pebble.showSimpleNotificationOnPebble("Sent " + type + ":", url + "\n" + data + "\n" + headerarray);
 }  
 
 function sendMessage(dict) {
