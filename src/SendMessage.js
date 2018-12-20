@@ -88,6 +88,12 @@ Pebble.addEventListener("webviewclosed",
     console.log("Label 1 set to: " + labels[1]);
     localStorage.setItem("label1", labels[1]);
     urls[1] = options["2"] + options["3"] + options["4"] + options["5"];
+    confirmations[1] = options["6"];
+    var divider = confirmations[1].indexOf("|");
+    if (divider >= 0) {
+      urls[1] += confirmations[1].slice(0,divider);
+      confirmations[1] = confirmations[1].slice(divider+1);
+    }
     var firstCurlyBracketLocation = urls[1].indexOf("{");
     if (firstCurlyBracketLocation < 0) 
       datas[1] = "";
@@ -95,7 +101,6 @@ Pebble.addEventListener("webviewclosed",
       datas[1] = urls[1].substring(firstCurlyBracketLocation, urls[1].length);
       urls[1] = urls[1].substring(0, firstCurlyBracketLocation);
     }
-    confirmations[1] = options["6"];
     console.log("URL 1 set to: " + urls[1]);
     localStorage.setItem("url1", urls[1]);
     console.log("Data 1 set to: " + datas[1]);
@@ -107,6 +112,12 @@ Pebble.addEventListener("webviewclosed",
     console.log("Label 2 set to: " + labels[2]);
     localStorage.setItem("label2", labels[2]);
     urls[2] = options["8"] + options["9"] + options["10"] + options["11"];
+    confirmations[2] = options["12"];
+    divider = confirmations[2].indexOf("|");
+    if (divider >= 0) {
+      urls[2] += confirmations[2].slice(0,divider);
+      confirmations[2] = confirmations[2].slice(divider+1);
+    }
     firstCurlyBracketLocation = urls[2].indexOf("{");
     if (firstCurlyBracketLocation < 0) 
       datas[2] = "";
@@ -114,7 +125,6 @@ Pebble.addEventListener("webviewclosed",
       datas[2] = urls[2].substring(firstCurlyBracketLocation, urls[2].length);
       urls[2] = urls[2].substring(0, firstCurlyBracketLocation);
     }
-    confirmations[2] = options["12"];
     console.log("URL 2 set to: " + urls[2]);
     localStorage.setItem("url2", urls[2]);
     console.log("Data 2 set to: " + datas[2]);
@@ -126,6 +136,12 @@ Pebble.addEventListener("webviewclosed",
     console.log("Label 3 set to: " + labels[3]);
     localStorage.setItem("label3", labels[3]);
     urls[3] = options["14"] + options["15"] + options["16"] + options["17"];
+    confirmations[3] = options["18"];
+    divider = confirmations[3].indexOf("|");
+    if (divider >= 0) {
+      urls[3] += confirmations[3].slice(0,divider);
+      confirmations[3] = confirmations[3].slice(divider+1);
+    }
     firstCurlyBracketLocation = urls[3].indexOf("{");
     if (firstCurlyBracketLocation < 0) 
       datas[3] = "";
@@ -133,7 +149,6 @@ Pebble.addEventListener("webviewclosed",
       datas[3] = urls[3].substring(firstCurlyBracketLocation, urls[3].length);
       urls[3] = urls[3].substring(0, firstCurlyBracketLocation);
     }
-    confirmations[3] = options["18"];
     console.log("URL 3 set to: " + urls[3]);
     localStorage.setItem("url3", urls[3]);
     console.log("Data 3 set to: " + datas[3]);

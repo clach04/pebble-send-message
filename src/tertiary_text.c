@@ -11,7 +11,7 @@
 static Window* window;
 
 static TextLayer* text_title;
-static TextLayer* text_layer;
+// static TextLayer* text_layer;
 static TextLayer* text_input;
 
 static TextLayer* buttons1[3];
@@ -258,7 +258,8 @@ static void drawSides()
         {
             setlist[i][2] = master[top+i];
             text_layer_set_text(bbuttons[i][i==2], setlist[i]);        
-        }
+            text_layer_set_font(bbuttons[i][i==2], fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+      }
     }
 }
 
@@ -276,42 +277,52 @@ static void initSidesAndText()
   
 		// Retrieve the window layer and its bounds
     Layer *window_layer = window_get_root_layer(window); 
-		GRect bounds = layer_get_bounds(window_layer);
+// 		GRect bounds = layer_get_bounds(window_layer);
 	
-		// Create a text layer for the text that is typed
-    text_layer = text_layer_create((GRect) { .origin = { 0, 72 }, .size = { bounds.size.w, 20 } });
-    text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
-    layer_add_child(window_layer, text_layer_get_layer(text_layer));
+		// Create a text layer for the text that is typed - WTF? - it was never used!
+//     text_layer = text_layer_create((GRect) { .origin = { 0, 72 }, .size = { bounds.size.w, 20 } });
+//     text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+//     layer_add_child(window_layer, text_layer_get_layer(text_layer));
     
 		// Create a text layer for the title
-		text_title = text_layer_create( GRect( 5, 5, 100, 30 ) );
+#if defined(PBL_ROUND)
+		text_title = text_layer_create( GRect( 30, 18, 85, 32 ) );
+#else
+    text_title = text_layer_create( GRect( 3, 0, 107, 32 ) );
+#endif
 		text_layer_set_font( text_title, fonts_get_system_font( FONT_KEY_GOTHIC_14_BOLD ) );
 		text_layer_set_text( text_title, title );
 		layer_add_child( window_layer, text_layer_get_layer( text_title ) );
-		
-    text_input = text_layer_create((GRect) { .origin = { 10, 40 }, .size = { 100, 150 } });
+
+    // Create a text layer for the text that has been typed - PRS
+#if defined(PBL_ROUND)
+    text_input = text_layer_create((GRect) { .origin = { 24, 48 }, .size = { 90, 100 } });
+    text_layer_set_font(text_input, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+#else
+    text_input = text_layer_create((GRect) { .origin = { 3, 24 }, .size = { 110, 150 } });
+    text_layer_set_font(text_input, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+#endif
 
     text_layer_set_background_color(text_input, GColorClear);
-    text_layer_set_font(text_input, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
     layer_add_child(window_layer, text_layer_get_layer(text_input));
     
     for (int i = 0; i<3; i++)
     {
+#if defined(PBL_ROUND)
+        buttons1[i] = text_layer_create((GRect) { .origin = { 120, 12*i+14 }, .size = { 100, 100 } });
+        buttons2[i] = text_layer_create((GRect) { .origin = { 120, 12*i+64 }, .size = { 100, 100 } });
+        buttons3[i] = text_layer_create((GRect) { .origin = { 120, 12*i+114 }, .size = { 100, 100 } });
+#else
         buttons1[i] = text_layer_create((GRect) { .origin = { 115, 12*i }, .size = { 100, 100 } });
         buttons2[i] = text_layer_create((GRect) { .origin = { 115, 12*i+50 }, .size = { 100, 100 } });
         buttons3[i] = text_layer_create((GRect) { .origin = { 115, 12*i+100 }, .size = { 100, 100 } });
+#endif
     }
 
     for( int i=0; i<3; i++ )
         for( int j=0; j<3; j++ )
             layer_add_child( window_layer, text_layer_get_layer( bbuttons[i][j] ) );
     
-		// Side inverter
-// 	was 	inverter_side = inverter_layer_create( GRect( 110, 0, 34, 169 ) );
-// 		inverter_side = text_layer_create( GRect( 110, 0, 34, 169 ) );
-//    text_layer_set_background_color(inverter_side, GColorBlack);
-//    text_layer_set_text_color(inverter_side, GColorWhite);
-// 	  layer_add_child( window_layer, text_layer_get_layer( inverter_side ) );
 }
 
 static void drawNotepadText()
@@ -321,15 +332,12 @@ static void drawNotepadText()
 
 static void window_unload(Window *window)
 {
-  text_layer_destroy(text_layer);
+//   text_layer_destroy(text_layer);
 	text_layer_destroy(text_input);
 	text_layer_destroy(text_title);
 	
-// 	inverter_layer_destroy( inverter_side );
-// 	text_layer_destroy( inverter_side );
-
-    for( int i=0; i<3; i++ )
-        for( int j=0; j<3; j++ )
+  for( int i=0; i<3; i++ )
+    for( int j=0; j<3; j++ )
 			text_layer_destroy( bbuttons[ i ][ j ] );
   
   window_destroy(window);
@@ -356,6 +364,9 @@ void tertiary_text_prompt( const char* _title, TertiaryTextCallback _callback, v
 
 		// Create and configure the window
     window = window_create();
+#ifndef PBL_SDK_3
+    window_set_fullscreen(window,true);
+#endif
     window_set_click_config_provider(window, click_config_provider);
 
     window_set_window_handlers(window, (WindowHandlers) {
@@ -372,4 +383,3 @@ void tertiary_text_prompt( const char* _title, TertiaryTextCallback _callback, v
 	// Push the window onto the stack
     window_stack_push(window, animated);
 }
-
