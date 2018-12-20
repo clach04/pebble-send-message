@@ -20,6 +20,7 @@ var urls = ["0"];           // Message URL for each button.
 var datas = ["0"];          // Message data segment for each button.
 var confirmations = ["0"];  // Message response confirmation string for each button.
 var queries = ["0"];        // Number of dictated text queries for each button.
+var usegps = ["0"];         // Tracks whether to call the GPS.
 var texts = ["0"];          // Up to three text strings to be inserted into the message.
 
 Pebble.addEventListener("ready", function(e) {
@@ -38,6 +39,16 @@ Pebble.addEventListener("ready", function(e) {
   queries[1] = ((urls[1] + datas[1]).match(/~Txt/g) || []).length;
   queries[2] = ((urls[2] + datas[2]).match(/~Txt/g) || []).length;
   queries[3] = ((urls[3] + datas[3]).match(/~Txt/g) || []).length;
+  var temp = urls[1] + datas[1];
+  usegps[1] = temp.match(/~Lat/) || temp.match(/~Lon/) || temp.match(/~Acc/) || temp.match(/~Spd/) || 
+    temp.match(/~Hed/) || temp.match(/~Alt/) || temp.match(/~Ala/) || temp.match(/~Gmp/) || temp.match(/~Adr/);
+  temp = urls[2] + datas[2];
+  usegps[2] = temp.match(/~Lat/) || temp.match(/~Lon/) || temp.match(/~Acc/) || temp.match(/~Spd/) || 
+    temp.match(/~Hed/) || temp.match(/~Alt/) || temp.match(/~Ala/) || temp.match(/~Gmp/) || temp.match(/~Adr/);
+  temp = urls[3] + datas[3];
+  usegps[3] = temp.match(/~Lat/) || temp.match(/~Lon/) || temp.match(/~Acc/) || temp.match(/~Spd/) || 
+    temp.match(/~Hed/) || temp.match(/~Alt/) || temp.match(/~Ala/) || temp.match(/~Gmp/) || temp.match(/~Adr/);
+  
   runtime = parseInt(localStorage.getItem("runtime")) || 5;
   imperial = (parseInt(localStorage.getItem("imperial")) == 1);
   initialized = true;
@@ -55,7 +66,7 @@ Pebble.addEventListener("ready", function(e) {
     function(e) { console.log('Labels sent to Pebble successfully! ' + e.data.transactionId); },
     function(e) { console.log('Error sending labels to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
 
-  console.log("JavaScript app ready and running! " + e.type, e.ready, " runtime="+runtime, " imperial="+imperial);
+  console.log("JavaScript app ready and running! " + e.type, e.ready, " runtime="+runtime, " imperial="+imperial, navigator.userAgent);
 });
 
 Pebble.addEventListener("appmessage",
@@ -67,7 +78,10 @@ Pebble.addEventListener("appmessage",
       texts[2] = e.payload.text2;
       texts[3] = e.payload.text3;
       console.log("Got command: " + message);
-      getLocation();
+      if (usegps[message])
+        getLocation();
+      else
+        sendMessage();  
     }
   }
 );
@@ -94,6 +108,9 @@ Pebble.addEventListener("webviewclosed",
       urls[1] += confirmations[1].slice(0,divider);
       confirmations[1] = confirmations[1].slice(divider+1);
     }
+    queries[1] = (urls[1].match(/~Txt/g) || []).length;
+    usegps[1] = urls[1].match(/~Lat/) || urls[1].match(/~Lon/) || urls[1].match(/~Acc/) || urls[1].match(/~Spd/) || 
+      urls[1].match(/~Hed/) || urls[1].match(/~Alt/) || urls[1].match(/~Ala/) || urls[1].match(/~Gmp/) || urls[1].match(/~Adr/);
     var firstCurlyBracketLocation = urls[1].indexOf("{");
     if (firstCurlyBracketLocation < 0) 
       datas[1] = "";
@@ -107,6 +124,7 @@ Pebble.addEventListener("webviewclosed",
     localStorage.setItem("data1", datas[1]);
     console.log("Confirmation 1 set to: " + confirmations[1]);
     localStorage.setItem("confirmation1", confirmations[1]);
+    console.log("Queries 1 set to: " + queries[1]);
     
     labels[2] = options["7"];
     console.log("Label 2 set to: " + labels[2]);
@@ -118,6 +136,9 @@ Pebble.addEventListener("webviewclosed",
       urls[2] += confirmations[2].slice(0,divider);
       confirmations[2] = confirmations[2].slice(divider+1);
     }
+    queries[2] = (urls[2].match(/~Txt/g) || []).length;
+    usegps[2] = urls[2].match(/~Lat/) || urls[2].match(/~Lon/) || urls[2].match(/~Acc/) || urls[2].match(/~Spd/) || 
+      urls[2].match(/~Hed/) || urls[2].match(/~Alt/) || urls[2].match(/~Ala/) || urls[2].match(/~Gmp/) || urls[2].match(/~Adr/);
     firstCurlyBracketLocation = urls[2].indexOf("{");
     if (firstCurlyBracketLocation < 0) 
       datas[2] = "";
@@ -131,6 +152,7 @@ Pebble.addEventListener("webviewclosed",
     localStorage.setItem("data2", datas[2]); 
     console.log("Confirmation 2 set to: " + confirmations[2]);
     localStorage.setItem("confirmation2", confirmations[2]);
+    console.log("Queries 2 set to: " + queries[2]);
     
     labels[3] = options["13"];
     console.log("Label 3 set to: " + labels[3]);
@@ -142,6 +164,9 @@ Pebble.addEventListener("webviewclosed",
       urls[3] += confirmations[3].slice(0,divider);
       confirmations[3] = confirmations[3].slice(divider+1);
     }
+    queries[3] = (urls[3].match(/~Txt/g) || []).length;
+    usegps[3] = urls[3].match(/~Lat/) || urls[3].match(/~Lon/) || urls[3].match(/~Acc/) || urls[3].match(/~Spd/) || 
+      urls[3].match(/~Hed/) || urls[3].match(/~Alt/) || urls[3].match(/~Ala/) || urls[3].match(/~Gmp/) || urls[3].match(/~Adr/);
     firstCurlyBracketLocation = urls[3].indexOf("{");
     if (firstCurlyBracketLocation < 0) 
       datas[3] = "";
@@ -155,12 +180,6 @@ Pebble.addEventListener("webviewclosed",
     localStorage.setItem("data3", datas[3]);
     console.log("Confirmation 3 set to: " + confirmations[3]);
     localStorage.setItem("confirmation3", confirmations[3]);
-    
-    queries[1] = ((urls[1] + datas[1]).match(/~Txt/g) || []).length;
-    queries[2] = ((urls[2] + datas[2]).match(/~Txt/g) || []).length;
-    queries[3] = ((urls[3] + datas[3]).match(/~Txt/g) || []).length;
-    console.log("Queries 1 set to: " + queries[1]);
-    console.log("Queries 2 set to: " + queries[2]);
     console.log("Queries 3 set to: " + queries[3]);
     
 //     imperial = (options["19"] === 1);
@@ -241,17 +260,6 @@ function locationSuccess(pos) {
 }
 
 function sendMessage() {
-  if (runtime > 0) navigator.geolocation.clearWatch(locationWatcher);
-  
-  // Send location back to watch.
-  var dictionary = {
-    "msg" : (myLat>=0 ? myLat.toFixed(5)+"N" : (-myLat).toFixed(5)+"S") +
-      "\n" + (myLong>=0 ? myLong.toFixed(5)+"E" : (-myLong).toFixed(5)+"W") +
-      "\n\u00B1" + myAccuracy.toFixed(0) + "m"
-  };
-  var transactionID = Pebble.sendAppMessage( dictionary,
-    function(e) { console.log('Location sent to Pebble successfully! ' + e.data.transactionId); },
-    function(e) { console.log('Error sending location to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
   
 //  Build request for server.
   
@@ -260,35 +268,70 @@ function sendMessage() {
   console.log("String 2 = " + texts[2]);
   console.log("String 3 = " + texts[3]);
 
+  var xhr = new XMLHttpRequest();
   var url = encodeURI(urls[message]);
-  url = url.replace(/~Lat/g,myLat.toFixed(5));
-  url = url.replace(/~Lon/g,myLong.toFixed(5));
-  url = url.replace(/~Acc/g,myAccuracy.toFixed(0));
-  try {url = url.replace(/~Spd/g,mySpeed.toFixed(0));} catch(err) {url = url.replace(/~Spd/g,"-1");}
-  try {url = url.replace(/~Hed/g,myHeading.toFixed(0));} catch(err) {url = url.replace(/~Hed/g,"-1");}
-  try {url = url.replace(/~Alt/g,myAltitude.toFixed(0));} catch(err) {url = url.replace(/~Alt/g,"-1");}
-  try {url = url.replace(/~Ala/g,myAltitudeAccuracy.toFixed(0));} catch(err) {url = url.replace(/~Ala/g,"-1");}
-  url = url.replace(/~Gmp/g,"https%3A%2F%2Fwww.google.com%2Fmaps%3Fq%3Dloc%3A" + myLat.toFixed(5) + "%2C" + myLong.toFixed(5));
+  var data = datas[message];
+  var address;
+  
+  if (usegps[message]) {
+    if (runtime > 0) navigator.geolocation.clearWatch(locationWatcher);
+  
+    // Send location back to watch.
+    var dictionary = {
+      "msg" : (myLat>=0 ? myLat.toFixed(5)+"N" : (-myLat).toFixed(5)+"S") +
+        "\n" + (myLong>=0 ? myLong.toFixed(5)+"E" : (-myLong).toFixed(5)+"W") +
+        "\n\u00B1" + myAccuracy.toFixed(0) + "m"
+    };
+    var transactionID = Pebble.sendAppMessage( dictionary,
+      function(e) { console.log('Location sent to Pebble successfully! ' + e.data.transactionId); },
+      function(e) { console.log('Error sending location to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+    
+    url = url.replace(/~Lat/g,myLat.toFixed(5));
+    url = url.replace(/~Lon/g,myLong.toFixed(5));
+    url = url.replace(/~Acc/g,myAccuracy.toFixed(0));
+    try {url = url.replace(/~Spd/g,mySpeed.toFixed(0));} catch(err) {url = url.replace(/~Spd/g,"-1");}
+    try {url = url.replace(/~Hed/g,myHeading.toFixed(0));} catch(err) {url = url.replace(/~Hed/g,"-1");}
+    try {url = url.replace(/~Alt/g,myAltitude.toFixed(0));} catch(err) {url = url.replace(/~Alt/g,"-1");}
+    try {url = url.replace(/~Ala/g,myAltitudeAccuracy.toFixed(0));} catch(err) {url = url.replace(/~Ala/g,"-1");}
+    url = url.replace(/~Gmp/g,"https%3A%2F%2Fwww.google.com%2Fmaps%3Fq%3Dloc%3A" + myLat.toFixed(5) + "%2C" + myLong.toFixed(5));
+    
+    if ((url+data).indexOf("~Adr") >= 0) {
+      xhr.open("GET", "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + myLat.toFixed(5) + "," + myLong.toFixed(5), false);
+      xhr.send();
+      address = JSON.parse(xhr.responseText).results[0].formatted_address;
+      console.log("Address = " + address);
+      // Send message to watch to show address.
+      dictionary = { "msg" : address };
+      transactionID = Pebble.sendAppMessage( dictionary,
+        function(e) { console.log('Address sent to Pebble successfully! ' + e.data.transactionId); },
+        function(e) { console.log('Error sending address to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
+      url = url.replace(/~Adr/g, encodeURIComponent(address));
+    }
+  }
+  
   url = url.replace(/~Lbl/g,encodeURIComponent(label));
   url = url.replace("~Txt",encodeURIComponent(texts[1]));
   url = url.replace("~Txt",encodeURIComponent(texts[2]));
   url = url.replace("~Txt",encodeURIComponent(texts[3]));
   
-  var data = datas[message];
   var type;
 
   if (data === "")
     type = "GET";
   else {
     type = "POST";
-    data = data.replace(/~Lat/g,myLat.toFixed(5));
-    data = data.replace(/~Lon/g,myLong.toFixed(5));
-    data = data.replace(/~Acc/g,myAccuracy.toFixed(0));
-    try {data = data.replace(/~Spd/g,mySpeed.toFixed(0));} catch(err) {data = data.replace(/~Spd/g,"-1");}
-    try {data = data.replace(/~Hed/g,myHeading.toFixed(0));} catch(err) {data = data.replace(/~Hed/g,"-1");}
-    try {data = data.replace(/~Alt/g,myAltitude.toFixed(0));} catch(err) {data = data.replace(/~Alt/g,"-1");}
-    try {data = data.replace(/~Ala/g,myAltitudeAccuracy.toFixed(0));} catch(err) {data = data.replace(/~Ala/g,"-1");}
-    data = data.replace(/~Gmp/g,"https://www.google.com/maps?q=loc:" + myLat.toFixed(5) + "," + myLong.toFixed(5));
+    if (usegps[message]) {
+      data = data.replace(/~Lat/g,myLat.toFixed(5));
+      data = data.replace(/~Lon/g,myLong.toFixed(5));
+      data = data.replace(/~Acc/g,myAccuracy.toFixed(0));
+      try {data = data.replace(/~Spd/g,mySpeed.toFixed(0));} catch(err) {data = data.replace(/~Spd/g,"-1");}
+      try {data = data.replace(/~Hed/g,myHeading.toFixed(0));} catch(err) {data = data.replace(/~Hed/g,"-1");}
+      try {data = data.replace(/~Alt/g,myAltitude.toFixed(0));} catch(err) {data = data.replace(/~Alt/g,"-1");}
+      try {data = data.replace(/~Ala/g,myAltitudeAccuracy.toFixed(0));} catch(err) {data = data.replace(/~Ala/g,"-1");}
+      data = data.replace(/~Gmp/g,"https://www.google.com/maps?q=loc:" + myLat.toFixed(5) + "," + myLong.toFixed(5));
+      data = data.replace(/~Adr/g, address);
+    }
+    
     data = data.replace(/~Lbl/g, label);
     data = data.replace("~Txt", texts[1]);
     data = data.replace("~Txt", texts[2]);
@@ -297,24 +340,6 @@ function sendMessage() {
   
   var confirmation = confirmations[message];
 
-  var xhr = new XMLHttpRequest();
-  var address;
-  
-  if ((url+data).indexOf("~Adr") >= 0) {
-    xhr.open("GET", "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + myLat.toFixed(5) + "," + myLong.toFixed(5), false);
-    xhr.send();
-    address = JSON.parse(xhr.responseText).results[0].formatted_address;
-    console.log("Address = " + address);
-    // Send message to watch to show address.
-    dictionary = {
-      "msg" : address
-    };
-    transactionID = Pebble.sendAppMessage( dictionary,
-      function(e) { console.log('Address sent to Pebble successfully! ' + e.data.transactionId); },
-      function(e) { console.log('Error sending address to Pebble! ' + e.data.transactionId + ' Error is: ' + e.error.message); } ); 
-    url = url.replace(/~Adr/g, encodeURIComponent(address));
-    data = data.replace(/~Adr/g, address);
-  }
 
   console.log("url = " + url);
   console.log("type= " + type);
