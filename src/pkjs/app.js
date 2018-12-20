@@ -3,6 +3,7 @@
 
 var Clay = require('pebble-clay');
 var clayConfig = require('./config');
+var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 
 var initialized = false;
 var myLat = 0;
@@ -14,7 +15,6 @@ var sentToServer;         // True when a set of readings has finished and the re
 var samplingTimeOver = true;  // True when the sampling time is over and the next reading will be the last.
 var locationOptions = {timeout: 4000, maximumAge: 0, enableHighAccuracy: true };
 var myAccuracy, mySpeed, myHeading, myAltitude, myAltitudeAccuracy;  // Readings from the GPS.
-// var setPebbleToken = "YNZX";
 var errorMessage;           // Error code if the location isn't returned correctly.
 var message;
 var labels = ["0"];         // Labels for the buttons.
@@ -25,37 +25,41 @@ var queries = ["0"];        // Number of dictated text queries for each button.
 var usegps = ["0"];         // Tracks whether to call the GPS.
 var texts = ["0"];          // Up to three text strings to be inserted into the message.
 var headers = ["0"];        // Header information to send.
-labels[1] = localStorage.getItem("label1") || "Please";
-labels[2] = localStorage.getItem("label2") || "set";
-labels[3] = localStorage.getItem("label3") || "configuration";
+var runtime;                // How long to run the location watcher in seconds, or zero to do single reads;
+var displayMessage;         // Whether to display the message sent for debugging;
+var displayResponse;        // Whether to display the response received for debugging;
 
-for (var i=1; i<=3; i++) {
-  urls[i] = localStorage.getItem("url"+i) || "";
-  datas[i] = localStorage.getItem("data"+i) || "";
-  headers[i] = localStorage.getItem("header"+i) || "";
-  confirmations[i] = localStorage.getItem("confirmation"+i) || "";
-  queries[i] = ((urls[i] + datas[i]).match(/~Txt/g) || []).length;
-  var temp = urls[i] + datas[i];
-  usegps[i] = temp.match(/~Lat/) || temp.match(/~Lon/) || temp.match(/~Acc/) || temp.match(/~Spd/) || 
-    temp.match(/~Hed/) || temp.match(/~Alt/) || temp.match(/~Ala/) || temp.match(/~Gmp/) || temp.match(/~Adr/);
-  clayConfig[i-1].items[1].defaultValue = labels[i];
-  clayConfig[i-1].items[2].defaultValue = urls[i];
-  clayConfig[i-1].items[3].defaultValue = datas[i];
-  clayConfig[i-1].items[4].defaultValue = headers[i];
-  clayConfig[i-1].items[5].defaultValue = confirmations[i];
-}
-var runtime = parseInt(localStorage.getItem("runtime")) || 5;        // How long to run the location watcher in seconds, or zero to do single reads;
-clayConfig[3].items[0].defaultValue = (runtime === 0);
-
-var displayMessage = (localStorage.getItem("displaymessage") == "1");  // Whether to display the message sent for debugging;
-clayConfig[3].items[1].defaultValue = displayMessage;
-
-var displayResponse = (localStorage.getItem("displayresponse") == "1");  // Whether to display the message sent for debugging;
-clayConfig[3].items[2].defaultValue = displayResponse;
-
-var clay = new Clay(clayConfig, null, { autoHandleEvents: false });
 
 Pebble.addEventListener("ready", function(e) {
+
+  labels[1] = localStorage.getItem("label1") || "Please";
+  labels[2] = localStorage.getItem("label2") || "set";
+  labels[3] = localStorage.getItem("label3") || "configuration";
+
+  for (var i=1; i<=3; i++) {
+    urls[i] = localStorage.getItem("url"+i) || "";
+    datas[i] = localStorage.getItem("data"+i) || "";
+    headers[i] = localStorage.getItem("header"+i) || "";
+    confirmations[i] = localStorage.getItem("confirmation"+i) || "";
+    queries[i] = ((urls[i] + datas[i]).match(/~Txt/g) || []).length;
+    var temp = urls[i] + datas[i];
+    usegps[i] = temp.match(/~Lat/) || temp.match(/~Lon/) || temp.match(/~Acc/) || temp.match(/~Spd/) || 
+      temp.match(/~Hed/) || temp.match(/~Alt/) || temp.match(/~Ala/) || temp.match(/~Gmp/) || temp.match(/~Adr/);
+  }
+  
+  runtime = parseInt(localStorage.getItem("runtime") || "5");
+  displayMessage = (localStorage.getItem("displaymessage") == "1");
+  displayResponse = (localStorage.getItem("displayresponse") == "1");
+  
+  console.log("Values retreived.");
+
+  clay.setSettings({"label1":labels[1], "url1":urls[1], "data1":datas[1], "header1":headers[1], "confirm1":confirmations[1],
+    "label2":labels[2], "url2":urls[2], "data2":datas[2], "header2":headers[2], "confirm2":confirmations[2], 
+    "label3":labels[3], "url3":urls[3], "data3":datas[3], "header3":headers[3], "confirm3":confirmations[3],
+    "quickgps":(runtime === 0), "displaymessage":displayMessage, "displayresponse": displayResponse});
+  
+  console.log("Values set in clay.");
+  
   // Send labels to watch.
   var dictionary = {
     "label1" : labels[1],
@@ -89,7 +93,6 @@ Pebble.addEventListener("appmessage",
 
 Pebble.addEventListener("showConfiguration",
   function() {
-//     var uri = "http://x.setpebble.com/" + setPebbleToken + "/" + Pebble.getAccountToken();
     var uri = clay.generateUrl();
     console.log("Configuration url: " + uri);
     Pebble.openURL(uri);
@@ -158,7 +161,7 @@ Pebble.addEventListener("webviewclosed",
     console.log("Display message set to: " + displayMessage);
 
     displayResponse = values.displayresponse.value;
-    localStorage.setItem("displayResponse", displayResponse ? 1 : 0);
+    localStorage.setItem("displayresponse", displayResponse ? 1 : 0);
     console.log("Display response set to: " + displayResponse);
 
 //  Send labels to watch.

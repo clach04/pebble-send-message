@@ -16,19 +16,19 @@ module.exports = [
       "type": "input",
       "messageKey": "url1",
       "label": "URL",
-      "description": "e.g. http://myserver.mydomain.com/path"
+      "description": "http://myserver.mydomain.com/path"
     },
     {
       "type": "input",
       "messageKey": "data1",
       "label": "Data",
-      "description": "e.g. {'key1': 'value1', 'key2': 'value2'}"
+      "description": "{'key1':'value1','key2':'value2',etc.}"
     },
     {
       "type": "input",
       "messageKey": "header1",
       "label": "Headers",
-      "description": "e.g. header1|value1|header2|value2"
+      "description": "header1|value1|header2|value2|etc."
     },
     {
       "type": "input",
@@ -55,19 +55,19 @@ module.exports = [
       "type": "input",
       "messageKey": "url2",
       "label": "URL",
-      "description": "e.g. http://myserver.mydomain.com/path"
+      "description": "http://myserver.mydomain.com/path"
     },
     {
       "type": "input",
       "messageKey": "data2",
       "label": "Data",
-      "description": "e.g. {'key1': 'value1', 'key2': 'value2'}"
+      "description": "{'key1':'value1','key2':'value2',etc.}"
     },
     {
       "type": "input",
       "messageKey": "header2",
       "label": "Headers",
-      "description": "e.g. header1|value1|header2|value2"
+      "description": "header1|value1|header2|value2|etc."
     },
     {
       "type": "input",
@@ -94,19 +94,19 @@ module.exports = [
       "type": "input",
       "messageKey": "url3",
       "label": "URL",
-      "description": "e.g. http://myserver.mydomain.com/path"
+      "description": "http://myserver.mydomain.com/path"
     },
     {
       "type": "input",
       "messageKey": "data3",
       "label": "Data",
-      "description": "e.g. {'key1':'value1','key2':'value2'}"
+      "description": "{'key1':'value1','key2':'value2',etc.}"
     },
     {
       "type": "input",
       "messageKey": "header3",
       "label": "Headers",
-      "description": "e.g. header1|value1|header2|value2"
+      "description": "header1|value1|header2|value2|etc."
     },
     {
       "type": "input",
