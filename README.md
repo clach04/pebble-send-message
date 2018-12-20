@@ -45,7 +45,3 @@ There are two options in the configuration to display the final message (with an
 then use it to view the app logs while the Send Message app runs.
 
 This app is provided as is - you are responsible for testing this app thoroughly and determining whether it works appropriately and meets your needs. The source code is available if you want to examine how it works or customize it.
-
-If you find it useful, please give it a heart.
-
-Updated 24 Sep 2016
