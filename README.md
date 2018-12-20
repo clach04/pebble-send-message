@@ -36,7 +36,7 @@ There's an option on the configuration screen to do a quick read of the GPS – th
 
 There are two options in the configuration to display the final message (with any substitutions) and the server response as notifications for debugging purposes.  Cloudpebble.net may also help you in debugging your setup. If you want to use it, either load my source code or create a single c file with the lines:
 
-    #include
+    #include <pebble.h>
 
     int main(void) {
     app_event_loop();
