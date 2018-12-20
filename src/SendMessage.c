@@ -149,7 +149,11 @@ static void click_config_provider(void *context) {
 
 static void window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
+#if defined(PBL_ROUND)
+  message1_layer = text_layer_create(GRect(18, 24, 144, 40));
+#else
   message1_layer = text_layer_create(GRect(0, 12, 144, 40));
+#endif
 #ifdef PBL_COLOR
   text_layer_set_background_color(message1_layer, GColorRajah);
 #else
@@ -159,7 +163,11 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(message1_layer, GTextAlignmentRight);
   layer_add_child(window_layer, text_layer_get_layer(message1_layer));
   
+#if defined(PBL_ROUND)
+  message2_layer = text_layer_create(GRect(18, 70, 144, 40));
+#else
   message2_layer = text_layer_create(GRect(0, 64, 144, 40));
+#endif
 #ifdef PBL_COLOR
   text_layer_set_background_color(message2_layer, GColorSunsetOrange);
 #else
@@ -169,7 +177,11 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(message2_layer, GTextAlignmentRight);
   layer_add_child(window_layer, text_layer_get_layer(message2_layer));
   
+#if defined(PBL_ROUND)
+  message3_layer = text_layer_create(GRect(18, 116, 144, 40));
+#else
   message3_layer = text_layer_create(GRect(0, 116, 144, 40));
+#endif
 #ifdef PBL_COLOR
   text_layer_set_background_color(message3_layer, GColorGreen);
 #else
@@ -192,7 +204,11 @@ static void init(void) {
   app_message_register_inbox_dropped(in_dropped_handler);
   app_message_register_outbox_sent(out_sent_handler);
   app_message_register_outbox_failed(out_failed_handler);
+#if defined(PBL_ROUND)
+  hint_layer_size = GRect(34, 48, 112, 88);
+#else
   hint_layer_size = GRect(16, 36, 112, 88);
+#endif
   const uint32_t inbound_size = APP_MESSAGE_INBOX_SIZE_MINIMUM;
   const uint32_t outbound_size = APP_MESSAGE_OUTBOX_SIZE_MINIMUM;
   app_message_open(inbound_size, outbound_size);
