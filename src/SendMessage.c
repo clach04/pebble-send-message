@@ -23,7 +23,7 @@ static TextLayer *message2_layer;
 static TextLayer *message3_layer;
 static char label[3][20];
 static uint8_t querynum, queries[MAX_QUERIES];
-static TextLayer *hint_layer;
+static TextLayer *hint_layer = NULL;
 static char hint_text[40];
 static GRect hint_layer_size;
 static uint8_t message;
@@ -70,10 +70,11 @@ static void send_message() {
 
 static void build_message() {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Building message %d of %d.", querynum, queries[message-1]);
-  if ((querynum < queries[message-1]) && (querynum < MAX_QUERIES))
 #ifdef PBL_COLOR
+  if ((querynum < queries[message-1]) && (querynum < MAX_QUERIES) && (s_dictation_session[querynum]))
     dictation_session_start(s_dictation_session[querynum]);
 #else
+  if ((querynum < queries[message-1]) && (querynum < MAX_QUERIES))
     tertiary_text_prompt(label[message-1], mytertiarytextcallback, NULL);
 #endif
 else
@@ -116,25 +117,43 @@ void mytertiarytextcallback(const char* result, size_t result_length, void* extr
 #endif
 
 static void up_handler(ClickRecognizerRef recognizer, void *context) {
-  message = 1;
-  querynum = 0;
-  build_message();
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Up button pressed.");
+  if (hint_layer) {
+    text_layer_destroy(hint_layer);
+    hint_layer = NULL;
+  } else {
+    message = 1;
+    querynum = 0;
+    build_message();
+  }
 }
 
 static void select_handler(ClickRecognizerRef recognizer, void *context) {
-  message = 2;
-  querynum = 0;
-  build_message();
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Select button pressed.");
+  if (hint_layer) {
+    text_layer_destroy(hint_layer);
+    hint_layer = NULL;
+  } else {
+     message = 2;
+    querynum = 0;
+    build_message();
+  }
 }
 
 static void down_handler(ClickRecognizerRef recognizer, void *context) {
-  message = 3;
-  querynum = 0;
-  build_message();
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Down button pressed.");
+  if (hint_layer) {
+    text_layer_destroy(hint_layer);
+    hint_layer = NULL;
+  } else {
+    message = 3;
+    querynum = 0;
+    build_message();
+  }
 }
 
 static void go_back_handler(ClickRecognizerRef recognizer, void *context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Go back.");
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Back button pressed.");
   if (hint_layer) {
     text_layer_destroy(hint_layer);
     hint_layer = NULL;
