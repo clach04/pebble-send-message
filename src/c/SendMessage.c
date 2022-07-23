@@ -30,6 +30,7 @@ static GRect hint_layer_size;
 static uint8_t message;
 time_t timeout_timer=0;
 time_t timeout_period=3 * 60;  // 3 minutes - TODO move into settings
+time_t timeout_period_hint=3;  // 3 seconds - TODO move into settings
 
 #ifdef PBL_MICROPHONE
 static DictationSession *s_dictation_session[MAX_QUERIES];
@@ -310,6 +311,14 @@ static void window_unload(Window *window) {
 }
 
 void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+  if (timeout_period_hint != 0) {
+    if (time(NULL) - timeout_timer >= timeout_period_hint) {
+      if (hint_layer) {
+        text_layer_destroy(hint_layer);
+        hint_layer = NULL;
+      }
+    }
+  }
   if (timeout_period != 0) {
     if (time(NULL) - timeout_timer >= timeout_period) {
       // From https://web.archive.org/web/20161202151353/https://forums.pebble.com/t/solved-proper-watch-app-exit-method/9976
