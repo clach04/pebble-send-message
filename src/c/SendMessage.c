@@ -1,5 +1,7 @@
 #include <pebble.h>
 
+#include <ctype.h>
+
 // TODO make this a build flag
 #undef APP_LOG
 #define APP_LOG(...)
@@ -91,8 +93,21 @@ else
 }
     
 #ifdef PBL_MICROPHONE
+/*
+** Remove punctuation from string, while at it also lower case
+** src and dst can be the same string since the destination will never be larger than the source.
+** Why? See https://www.reddit.com/r/pebble/comments/j33pnk/rebble_please_tweak_the_handling_of_punctuation/ https://www.reddit.com/r/pebble/comments/t1ja4z/does_ifttt_still_work_with_snowy/
+*/
+void clean_dictation_string(char *src, char *dst) {
+    for (; *src; ++src)
+        if (!ispunct((unsigned char) *src))
+            *dst++ = tolower((unsigned char) *src);
+    *dst = 0;
+}
+
 static void dictation_session_callback(DictationSession *session, DictationSessionStatus status, char *transcription, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got to the callback.");
+  clean_dictation_string(transcription, transcription);
   if(status == DictationSessionStatusSuccess) {
     // Display the dictated text
     APP_LOG(APP_LOG_LEVEL_DEBUG, transcription);
