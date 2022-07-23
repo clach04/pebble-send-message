@@ -1,5 +1,6 @@
 #include <pebble.h>
 
+// TODO make this a build flag
 #undef APP_LOG
 #define APP_LOG(...)
   
