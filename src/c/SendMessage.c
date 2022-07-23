@@ -28,7 +28,7 @@ static char hint_text[40];
 static GRect hint_layer_size;
 static uint8_t message;
 time_t timeout_timer=0;
-time_t timeout_period=30;  // TODO move into settings
+time_t timeout_period=3 * 60;  // 3 minutes - TODO move into settings
 
 #ifdef PBL_MICROPHONE
 static DictationSession *s_dictation_session[MAX_QUERIES];
