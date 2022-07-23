@@ -27,6 +27,8 @@ static TextLayer *hint_layer = NULL;
 static char hint_text[40];
 static GRect hint_layer_size;
 static uint8_t message;
+time_t timeout_timer=0;
+time_t timeout_period=30;  // TODO move into settings
 
 #ifdef PBL_MICROPHONE
 static DictationSession *s_dictation_session[MAX_QUERIES];
@@ -35,6 +37,11 @@ static DictationSession *s_dictation_session[MAX_QUERIES];
 void mytertiarytextcallback(const char* result, size_t result_length, void* extra);
 #endif
 static char s_last_text[MAX_QUERIES][512];
+
+void reset_timeout() {
+  timeout_timer = time(NULL);
+}
+
 
 static void send_message() {   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got to sending message.");
@@ -69,6 +76,7 @@ static void send_message() {
 }
 
 static void build_message() {
+  reset_timeout();
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Building message %d of %d.", querynum, queries[message-1]);
 #ifdef PBL_MICROPHONE
   if ((querynum < queries[message-1]) && (querynum < MAX_QUERIES) && (s_dictation_session[querynum]))
@@ -300,11 +308,22 @@ static void window_unload(Window *window) {
   if (hint_layer) text_layer_destroy(hint_layer);
 }
 
+void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+  if (timeout_period != 0) {
+    if (time(NULL) - timeout_timer >= timeout_period) {
+      // From https://web.archive.org/web/20161202151353/https://forums.pebble.com/t/solved-proper-watch-app-exit-method/9976
+      // https://developer.rebble.io/developer.pebble.com/docs/c/User_Interface/Window_Stack/index.html
+      window_stack_pop_all(true);
+    }
+  }
+}
+
 static void init(void) {
   app_message_register_inbox_received(in_received_handler);
   app_message_register_inbox_dropped(in_dropped_handler);
   app_message_register_outbox_sent(out_sent_handler);
   app_message_register_outbox_failed(out_failed_handler);
+  reset_timeout();
 #if defined(PBL_ROUND)
   hint_layer_size = GRect(34, 48, 112, 88);
 #else
@@ -324,9 +343,11 @@ static void init(void) {
   for (uint8_t i=0; i < MAX_QUERIES; i++)
     s_dictation_session[i] = dictation_session_create(sizeof(s_last_text), dictation_session_callback, NULL);
 #endif
+  tick_timer_service_subscribe(SECOND_UNIT, &handle_second_tick);
 }
 
 static void deinit(void) {
+  tick_timer_service_unsubscribe();
 #ifdef PBL_MICROPHONE
   for (uint8_t i=0; i < MAX_QUERIES; i++)
     dictation_session_destroy(s_dictation_session[i]);
