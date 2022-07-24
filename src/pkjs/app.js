@@ -328,7 +328,7 @@ function sendToServer() {
     dictionary = {
       "msg" : (confirmation.length === 0) ? "Message\nreceived\nby server." : ((confirmation[0] == "~") ? 
         (JSON.stringify((confirmation.length == 1) ? response : eval("response" + "." + confirmation.substr(1)))) :
-        (JSON.stringify(response).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "Message\nrejected by\nserver."))
+        (JSON.stringify(response).indexOf(confirmation) >= 0 ? "Message\naccepted by\nserver." : "!Message\nrejected by\nserver."))
     };
     if (dictionary.msg.length <= 30)
       sendMessage(dictionary); 
