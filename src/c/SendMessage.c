@@ -32,6 +32,8 @@ static GRect hint_layer_size;
 static uint8_t message;
 time_t timeout_timer=0;
 time_t timeout_period=3 * 60;  // 3 minutes - TODO move into settings
+time_t timeout_period_hint=3;  // 3 seconds - TODO move into settings
+bool display_success_hints=false;  // Original behavior was true - TODO move into settings
 
 #ifdef PBL_MICROPHONE
 static DictationSession *s_dictation_session[MAX_QUERIES];
@@ -45,6 +47,15 @@ void reset_timeout() {
   timeout_timer = time(NULL);
 }
 
+void create_hint_layer() {
+  if (!hint_layer) {
+    Layer *window_layer = window_get_root_layer(window);
+    hint_layer = text_layer_create(hint_layer_size);
+    text_layer_set_font(hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_text_alignment(hint_layer, GTextAlignmentCenter);
+    layer_add_child(window_layer, text_layer_get_layer(hint_layer));
+  }
+}
 
 static void send_message() {   
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Got to sending message.");
@@ -66,15 +77,11 @@ static void send_message() {
     const uint32_t final_size = dict_write_end(iter);
     app_message_outbox_send();
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Sent message '%d' to phone! (%d bytes)", message, (int) final_size);
-    if (!hint_layer) {
-      Layer *window_layer = window_get_root_layer(window);
-      hint_layer = text_layer_create(hint_layer_size);
-      text_layer_set_font(hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-      text_layer_set_text_alignment(hint_layer, GTextAlignmentCenter);
-      layer_add_child(window_layer, text_layer_get_layer(hint_layer));
+    if (display_success_hints) {
+      create_hint_layer();
+      snprintf(hint_text, sizeof(hint_text), "Sent\nmessage\n'%s'",label[message-1]);
+      text_layer_set_text(hint_layer, hint_text);
     }
-    snprintf(hint_text, sizeof(hint_text), "Sent\nmessage\n'%s'",label[message-1]);
-    text_layer_set_text(hint_layer, hint_text);   
   }
 }
 
@@ -119,13 +126,7 @@ static void dictation_session_callback(DictationSession *session, DictationSessi
  } else {
     // Display the reason for any error
     snprintf(hint_text, sizeof(hint_text), "Transcription\nfailed.\nError:%d", (int)status);
-    if (!hint_layer) {
-      Layer *window_layer = window_get_root_layer(window);
-      hint_layer = text_layer_create(hint_layer_size);
-      text_layer_set_font(hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-      text_layer_set_text_alignment(hint_layer, GTextAlignmentCenter);
-      layer_add_child(window_layer, text_layer_get_layer(hint_layer));
-    }
+    create_hint_layer();
     text_layer_set_text(hint_layer, hint_text);
   }
 }
@@ -187,28 +188,20 @@ static void go_back_handler(ClickRecognizerRef recognizer, void *context) {
 
 void out_sent_handler(DictionaryIterator *sent, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Message accepted by phone.");
-  if (!hint_layer) {
-    Layer *window_layer = window_get_root_layer(window);
-    hint_layer = text_layer_create(hint_layer_size);
-    text_layer_set_font(hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    text_layer_set_text_alignment(hint_layer, GTextAlignmentCenter);
-    layer_add_child(window_layer, text_layer_get_layer(hint_layer));
+  if (display_success_hints) {
+    create_hint_layer();
+    text_layer_set_text(hint_layer, "Message accepted by phone.");
+    vibes_short_pulse();
   }
-  text_layer_set_text(hint_layer, "Message accepted by phone.");
-  vibes_short_pulse();
 }
 
 void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_WARNING, "Message rejected by phone: %d", reason);
+  create_hint_layer();
   if (reason == APP_MSG_SEND_TIMEOUT) {
-    if (!hint_layer) {
-      Layer *window_layer = window_get_root_layer(window);
-      hint_layer = text_layer_create(hint_layer_size);
-      text_layer_set_font(hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-      text_layer_set_text_alignment(hint_layer, GTextAlignmentCenter);
-      layer_add_child(window_layer, text_layer_get_layer(hint_layer));
-    }
-  text_layer_set_text(hint_layer, "Message rejected by phone.");
+    text_layer_set_text(hint_layer, "Message rejected by phone.");
+  } else {
+    text_layer_set_text(hint_layer, "Error communicating with phone.");
   }
   vibes_long_pulse();
 }
@@ -218,19 +211,16 @@ void in_received_handler(DictionaryIterator *iterator, void *context) {
 
   Tuple *message_tuple = dict_find(iterator, MSG_KEY);
   if (message_tuple) {
-    if (!hint_layer) {
-      Layer *window_layer = window_get_root_layer(window);
-      hint_layer = text_layer_create(hint_layer_size);
-      text_layer_set_font(hint_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-      text_layer_set_text_alignment(hint_layer, GTextAlignmentCenter);
-      layer_add_child(window_layer, text_layer_get_layer(hint_layer));
-    }
+
     snprintf(hint_text, sizeof(hint_text), "%s", message_tuple->value->cstring);
     if (hint_text[0] == '!') {
+      create_hint_layer();
       text_layer_set_text(hint_layer, &hint_text[1]);
       vibes_double_pulse();
-    } else
-      text_layer_set_text(hint_layer, hint_text);   
+    } else if (display_success_hints) {
+      create_hint_layer();
+      text_layer_set_text(hint_layer, hint_text);
+    }
   }
   Tuple *label1_tuple = dict_find(iterator, LABEL1_KEY);
   if (label1_tuple) {
@@ -325,6 +315,14 @@ static void window_unload(Window *window) {
 }
 
 void handle_second_tick(struct tm *tick_time, TimeUnits units_changed) {
+  if (timeout_period_hint != 0) {
+    if (time(NULL) - timeout_timer >= timeout_period_hint) {
+      if (hint_layer) {
+        text_layer_destroy(hint_layer);
+        hint_layer = NULL;
+      }
+    }
+  }
   if (timeout_period != 0) {
     if (time(NULL) - timeout_timer >= timeout_period) {
       // From https://web.archive.org/web/20161202151353/https://forums.pebble.com/t/solved-proper-watch-app-exit-method/9976
